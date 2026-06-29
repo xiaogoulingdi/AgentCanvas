@@ -44,8 +44,8 @@ export class OpenCodeBackendAdapter implements AgentBackend {
       for (const node of request.plan.nodes.slice(0, this.options.maxNodes ?? request.plan.nodes.length)) {
         yield { type: "agent.started", node };
 
-        const providerId = this.options.providerId ?? "opencode";
-        const modelId = this.options.modelId ?? "deepseek-v4-flash-free";
+        const providerId = this.options.providerId ?? "deepseek";
+        const modelId = this.options.modelId ?? "deepseek-v4-flash";
         yield {
           type: "model.route.selected",
           node,

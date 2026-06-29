@@ -11,8 +11,8 @@ import type { ExecutionEngine } from "../../../packages/engines/src/types.ts";
 
 const workflowPath = readArg("--workflow") ?? "examples/workflows/research-code.json";
 const prompt = readArg("--prompt");
-const providerId = readArg("--provider-id") ?? "opencode";
-const modelId = readArg("--model-id") ?? "deepseek-v4-flash-free";
+const providerId = readArg("--provider-id") ?? "deepseek";
+const modelId = readArg("--model-id") ?? "deepseek-v4-flash";
 const maxNodes = Number(readArg("--max-nodes") ?? "1");
 const timeoutMs = Number(readArg("--timeout-ms") ?? "60000");
 const json = process.argv.includes("--json");

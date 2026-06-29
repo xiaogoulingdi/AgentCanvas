@@ -1,6 +1,7 @@
 import { createOpenCodeConnection } from "../../../packages/opencode/src/client.ts";
 
 const providerFilter = readArg("--provider");
+const search = readArg("--search")?.toLowerCase();
 const limit = Number(readArg("--limit") ?? "30");
 
 const connection = await createOpenCodeConnection({
@@ -25,6 +26,7 @@ try {
         output: readProp(readObject(readProp(model, "limit")), "output") ?? null
       }));
     })
+    .filter((model) => !search || `${model.providerId} ${model.modelId} ${model.name}`.toLowerCase().includes(search))
     .slice(0, limit);
 
   console.log(JSON.stringify(rows, null, 2));

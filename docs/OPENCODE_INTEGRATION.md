@@ -136,8 +136,8 @@ npm.cmd run run:opencode -- --workflow examples/workflows/opencode-single.json -
 默认 provider/model：
 
 ```text
-provider: opencode
-model: deepseek-v4-flash-free
+provider: deepseek
+model: deepseek-v4-flash
 ```
 
 默认关闭 OpenCode 写入工具。只有显式传入下面参数才允许 OpenCode edit/write/patch：
@@ -154,8 +154,9 @@ npm.cmd run run:opencode -- --workflow examples/workflows/research-code.json --p
 
 如果 OpenCode provider/model 响应慢或不可用，CLI 会输出 `workflow.failed` trace。当前已确认：
 
-- `opencode/deepseek-v4-flash-free` 曾成功返回 `OK`。
-- 同一免费模型偶发超时，属于外部 provider 队列/服务波动。
+- `deepseek/deepseek-v4-flash` 已使用用户提供的测试 API key 成功返回 `OK`。
+- `opencode/deepseek-v4-flash-free` 曾成功返回 `OK`，但免费模型偶发超时，属于外部 provider 队列/服务波动。
+- OpenCode 的 `kimi-for-coding` provider 使用 Kimi Coding API，不等同于 Moonshot 普通 OpenAI-compatible endpoint；当前用户提供的 Kimi key 在该 OpenCode provider 上会返回 401。
 - 超时时不会修改文件，trace 会保留失败节点。
 
 ## 下一步

@@ -4,9 +4,7 @@ type OpenAIChatCompletionResponse = {
   id?: string;
   model?: string;
   choices?: Array<{
-    message?: {
-      content?: string | null;
-    };
+    message?: OpenAIMessage;
     finish_reason?: string;
   }>;
   usage?: {
@@ -19,6 +17,11 @@ type OpenAIChatCompletionResponse = {
     type?: string;
     code?: string;
   };
+};
+
+type OpenAIMessage = {
+  content?: string | Array<{ type?: string; text?: string }> | null;
+  reasoning_content?: string | null;
 };
 
 export class OpenAICompatibleAdapter implements ModelAdapter {
@@ -57,7 +60,7 @@ export class OpenAICompatibleAdapter implements ModelAdapter {
       throw new Error(`Model request failed (${response.status}): ${detail}`);
     }
 
-    const content = raw.choices?.[0]?.message?.content ?? "";
+    const content = extractMessageContent(raw.choices?.[0]?.message);
     const usage = normalizeUsage(raw.usage);
     return {
       id: raw.id ?? "unknown",
@@ -68,6 +71,19 @@ export class OpenAICompatibleAdapter implements ModelAdapter {
       ...(usage ? { usage } : {})
     };
   }
+}
+
+function extractMessageContent(message: OpenAIMessage | undefined): string {
+  if (!message || typeof message !== "object") return "";
+  const content = "content" in message ? message.content : undefined;
+  if (typeof content === "string") return content;
+  if (Array.isArray(content)) {
+    return content.map((part) => part.text ?? "").join("").trim();
+  }
+  if ("reasoning_content" in message && typeof message.reasoning_content === "string") {
+    return message.reasoning_content;
+  }
+  return "";
 }
 
 export function buildAuthHeader(

@@ -100,13 +100,17 @@ async function withTimeout<T>(promise: Promise<T>, timeoutMs: number, message: s
 }
 
 function assertNoSdkError(value: unknown, message: string, sessionId: string): void {
-  if (!value || typeof value !== "object" || !("error" in value)) return;
-  const error = value.error as { name?: string; data?: { message?: string; ref?: string } };
+  const directError = value && typeof value === "object" && "error" in value ? value.error : undefined;
+  const data = value && typeof value === "object" && "data" in value ? value.data : undefined;
+  const info = data && typeof data === "object" && "info" in data ? data.info : undefined;
+  const nestedError = info && typeof info === "object" && "error" in info ? info.error : undefined;
+  const error = (directError ?? nestedError) as { name?: string; data?: { message?: string; ref?: string; statusCode?: number } } | undefined;
   if (!error) return;
 
   const detail = error.data?.message ?? error.name ?? "unknown error";
   const ref = error.data?.ref ? ` ref=${error.data.ref}` : "";
-  throw new Error(`${message}: ${detail}; session=${sessionId}${ref}`);
+  const status = error.data?.statusCode ? ` status=${error.data.statusCode}` : "";
+  throw new Error(`${message}: ${detail}; session=${sessionId}${status}${ref}`);
 }
 
 function defaultToolPolicy(allowEdits: boolean): Record<string, boolean> {
