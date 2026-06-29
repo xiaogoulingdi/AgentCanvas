@@ -61,6 +61,14 @@ npm.cmd run opencode:health
 - 能识别 Git 分支
 - 能读取 OpenCode path 配置
 
+## Model List
+
+精简列出 OpenCode 模型：
+
+```powershell
+npm.cmd run opencode:models -- --provider opencode --limit 20
+```
+
 ## Agent Canvas Adapter 方向
 
 建议后续新增：
@@ -116,6 +124,39 @@ npm.cmd run opencode:prompt -- --prompt "..." --allow-opencode-edits
 ```powershell
 npm.cmd run opencode:prompt -- --prompt "..." --provider-id anthropic --model-id claude-sonnet-4-20250514
 ```
+
+## OpenCode Backend
+
+Agent Canvas 现在可以通过 OpenCode backend 跑 workflow：
+
+```powershell
+npm.cmd run run:opencode -- --workflow examples/workflows/opencode-single.json --prompt "Reply with OK only."
+```
+
+默认 provider/model：
+
+```text
+provider: opencode
+model: deepseek-v4-flash-free
+```
+
+默认关闭 OpenCode 写入工具。只有显式传入下面参数才允许 OpenCode edit/write/patch：
+
+```powershell
+npm.cmd run run:opencode -- --workflow examples/workflows/opencode-single.json --prompt "..." --allow-opencode-edits
+```
+
+默认只跑 1 个 workflow node，避免长 workflow 在免费模型队列中卡住：
+
+```powershell
+npm.cmd run run:opencode -- --workflow examples/workflows/research-code.json --prompt "..." --max-nodes 2 --timeout-ms 90000
+```
+
+如果 OpenCode provider/model 响应慢或不可用，CLI 会输出 `workflow.failed` trace。当前已确认：
+
+- `opencode/deepseek-v4-flash-free` 曾成功返回 `OK`。
+- 同一免费模型偶发超时，属于外部 provider 队列/服务波动。
+- 超时时不会修改文件，trace 会保留失败节点。
 
 ## 下一步
 

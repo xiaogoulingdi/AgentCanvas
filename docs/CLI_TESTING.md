@@ -206,6 +206,20 @@ npm.cmd run opencode:health
 
 该命令用于确认 Agent Canvas 能启动或连接 OpenCode server，并读取当前 project/path/vcs。
 
+列出模型：
+
+```powershell
+npm.cmd run opencode:models -- --provider opencode --limit 5
+```
+
+通过 OpenCode backend 跑 Agent Canvas workflow：
+
+```powershell
+npm.cmd run run:opencode -- --workflow examples/workflows/opencode-single.json --prompt "Reply with OK only." --timeout-ms 90000
+```
+
+OpenCode 免费模型可能偶发超时；超时时 CLI 会输出 `workflow.failed` trace。
+
 ## 9. 为什么现在不先做桌面弹窗
 
 真正桌面窗口通常需要引入 Tauri、Electron 或类似运行壳。它会带来：

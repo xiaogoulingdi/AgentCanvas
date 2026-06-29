@@ -8,6 +8,7 @@ export type OpenCodePromptInput = {
   providerId?: string;
   modelId?: string;
   allowEdits?: boolean;
+  timeoutMs?: number;
 };
 
 export type OpenCodePromptResult = {
@@ -32,24 +33,28 @@ export async function runOpenCodePrompt(input: OpenCodePromptInput): Promise<Ope
   }
 
   const sessionId = session.data.id;
-  const message = await input.client.session.prompt({
-    path: {
-      id: sessionId
-    },
-    query: {
-      directory: input.directory
-    },
-    body: {
-      ...(input.providerId && input.modelId ? { model: { providerID: input.providerId, modelID: input.modelId } } : {}),
-      tools: defaultToolPolicy(input.allowEdits ?? false),
-      parts: [
-        {
-          type: "text",
-          text: input.prompt
-        }
-      ]
-    }
-  });
+  const message = await withTimeout(
+    input.client.session.prompt({
+      path: {
+        id: sessionId
+      },
+      query: {
+        directory: input.directory
+      },
+      body: {
+        ...(input.providerId && input.modelId ? { model: { providerID: input.providerId, modelID: input.modelId } } : {}),
+        tools: defaultToolPolicy(input.allowEdits ?? false),
+        parts: [
+          {
+            type: "text",
+            text: input.prompt
+          }
+        ]
+      }
+    }),
+    input.timeoutMs ?? 60000,
+    `OpenCode prompt timed out after ${input.timeoutMs ?? 60000}ms`
+  );
   assertNoSdkError(message, "OpenCode prompt failed", sessionId);
 
   const [messages, diff] = await Promise.all([
@@ -78,6 +83,20 @@ export async function runOpenCodePrompt(input: OpenCodePromptInput): Promise<Ope
     messages,
     diff
   };
+}
+
+async function withTimeout<T>(promise: Promise<T>, timeoutMs: number, message: string): Promise<T> {
+  let timeout: NodeJS.Timeout | undefined;
+  try {
+    return await Promise.race([
+      promise,
+      new Promise<T>((_, reject) => {
+        timeout = setTimeout(() => reject(new Error(message)), timeoutMs);
+      })
+    ]);
+  } finally {
+    if (timeout) clearTimeout(timeout);
+  }
 }
 
 function assertNoSdkError(value: unknown, message: string, sessionId: string): void {

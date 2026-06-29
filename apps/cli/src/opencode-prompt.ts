@@ -5,17 +5,18 @@ const prompt = readArg("--prompt");
 const baseUrl = readArg("--base-url") ?? process.env.OPENCODE_BASE_URL;
 const providerId = readArg("--provider-id");
 const modelId = readArg("--model-id");
+const timeoutMs = Number(readArg("--timeout-ms") ?? "60000");
 const allowEdits = process.argv.includes("--allow-opencode-edits");
 
 if (!prompt) {
   console.error(
-    "Usage: npm.cmd run opencode:prompt -- --prompt <prompt> [--base-url <url>] [--provider-id <id> --model-id <id>] [--allow-opencode-edits]"
+    "Usage: npm.cmd run opencode:prompt -- --prompt <prompt> [--base-url <url>] [--provider-id <id> --model-id <id>] [--timeout-ms <ms>] [--allow-opencode-edits]"
   );
   process.exit(1);
 }
 
 const connection = await createOpenCodeConnection({
-  ...(baseUrl ? { baseUrl } : { hostname: "127.0.0.1", port: 4096, timeout: 10000 })
+  ...(baseUrl ? { baseUrl } : { hostname: "127.0.0.1", timeout: 10000 })
 });
 
 try {
@@ -24,6 +25,7 @@ try {
     directory: process.cwd(),
     prompt,
     allowEdits,
+    timeoutMs,
     ...(providerId ? { providerId } : {}),
     ...(modelId ? { modelId } : {})
   });

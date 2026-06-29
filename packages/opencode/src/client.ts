@@ -1,4 +1,5 @@
 import type { OpencodeClient } from "@opencode-ai/sdk";
+import { createServer } from "node:net";
 
 export type OpenCodeConnectionOptions = {
   baseUrl?: string;
@@ -25,9 +26,10 @@ export async function createOpenCodeConnection(options: OpenCodeConnectionOption
     };
   }
 
+  const port = options.port ?? (await findFreePort());
   const opencode = await sdk.createOpencode({
     hostname: options.hostname ?? "127.0.0.1",
-    port: options.port ?? 4096,
+    port,
     timeout: options.timeout ?? 5000
   });
 
@@ -37,4 +39,21 @@ export async function createOpenCodeConnection(options: OpenCodeConnectionOption
       opencode.server.close();
     }
   };
+}
+
+async function findFreePort(): Promise<number> {
+  return await new Promise((resolve, reject) => {
+    const server = createServer();
+    server.listen(0, "127.0.0.1", () => {
+      const address = server.address();
+      server.close(() => {
+        if (address && typeof address === "object") {
+          resolve(address.port);
+        } else {
+          reject(new Error("Failed to allocate an OpenCode server port."));
+        }
+      });
+    });
+    server.on("error", reject);
+  });
 }

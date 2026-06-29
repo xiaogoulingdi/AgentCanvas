@@ -1,0 +1,22 @@
+{
+  "id": "opencode-single",
+  "name": "OpenCode Single Node",
+  "version": "0.1.0",
+  "entry": "coder",
+  "limits": {
+    "maxSteps": 5,
+    "maxDiscussionRounds": 1,
+    "maxEstimatedUsd": 1,
+    "maxRuntimeSeconds": 120
+  },
+  "nodes": {
+    "coder": {
+      "type": "agent",
+      "role": "coder",
+      "route": "code",
+      "tools": [],
+      "permissions": ["filesystem.read", "filesystem.patch"]
+    }
+  },
+  "edges": []
+}

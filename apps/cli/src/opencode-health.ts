@@ -2,11 +2,11 @@ import { createOpenCodeConnection } from "../../../packages/opencode/src/client.
 
 const baseUrl = readArg("--base-url") ?? process.env.OPENCODE_BASE_URL;
 const hostname = readArg("--hostname") ?? "127.0.0.1";
-const port = Number(readArg("--port") ?? "4096");
+const portArg = readArg("--port");
 const timeout = Number(readArg("--timeout") ?? "10000");
 
 const connection = await createOpenCodeConnection({
-  ...(baseUrl ? { baseUrl } : { hostname, port, timeout })
+  ...(baseUrl ? { baseUrl } : { hostname, ...(portArg ? { port: Number(portArg) } : {}), timeout })
 });
 
 try {
