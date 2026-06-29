@@ -141,6 +141,8 @@ Patch artifact 还会保留结构化 metadata：
 {
   "source": "opencode",
   "opencodeSessionId": "ses_xxx",
+  "diffSource": "opencode-sdk",
+  "alreadyApplied": true,
   "diffs": [
     {
       "file": "path/to/file",
@@ -163,6 +165,14 @@ npm.cmd run patch:revert -- --session-id <session-id> --artifact-id <artifact-id
 ```
 
 当前 patch apply 会先检查文件当前内容是否匹配 `before` 快照；不匹配时拒绝写入。
+
+如果 OpenCode SDK 的 `session.diff` 返回为空，但 `--allow-opencode-edits` 已让 OpenCode 修改了 Git tracked 文件，Agent Canvas 会使用运行前后的 Git tracked file snapshot 生成 fallback diff：
+
+```text
+diffSource: git-snapshot
+```
+
+这让真实编辑仍然可以进入 patch artifact lifecycle，并支持 `patch:revert --yes`。
 
 ## Kimi 说明
 

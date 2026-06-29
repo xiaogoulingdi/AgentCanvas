@@ -96,6 +96,18 @@ Trace 中会显示权限决策，例如：
 [permission.checked] coder filesystem.patch -> ask (Scope filesystem.patch matched configured static policy.)
 ```
 
+Trace 观察器：
+
+```text
+apps/trace-observer/index.html
+```
+
+第一版是静态只读页面。运行下面命令后，把 JSON 粘贴进去即可：
+
+```powershell
+npm.cmd run run:inspect -- --latest --json
+```
+
 ## DeepSeek + Kimi 路由测试
 
 ```powershell
@@ -145,6 +157,28 @@ npm.cmd run opencode:models -- --search kimi --limit 5
 ```powershell
 $env:DEEPSEEK_API_KEY="sk-your-deepseek-key"
 npm.cmd run run:opencode -- --workflow examples/workflows/opencode-single.json --prompt "Reply with OK only." --timeout-ms 90000
+```
+
+真实小修改 smoke：
+
+```powershell
+$env:DEEPSEEK_API_KEY="sk-your-deepseek-key"
+npm.cmd run run:opencode -- --workflow examples/workflows/opencode-single.json --prompt "Change only examples/smoke/opencode-edit.txt so its entire content is exactly: after. Do not edit any other file. Do not run shell commands." --timeout-ms 120000 --allow-opencode-edits
+```
+
+成功时 trace 会出现：
+
+```text
+[backend.session.observed] ... diffs=1
+[artifact.created] patch: OpenCode coder diff
+```
+
+然后可以回滚：
+
+```powershell
+npm.cmd run patch:list -- --session-id <session-id>
+npm.cmd run patch:revert -- --session-id <session-id> --artifact-id <artifact-id>
+npm.cmd run patch:revert -- --session-id <session-id> --artifact-id <artifact-id> --yes
 ```
 
 OpenCode 安全参数：
@@ -217,6 +251,7 @@ npm.cmd run patch:revert -- --session-id <session-id> --artifact-id <artifact-id
 - 只有带结构化 `before/after` metadata 的 patch artifact 可以应用。
 - 默认 dry-run，不写文件。
 - 应用前会检查当前文件内容是否仍匹配 `before` 快照。
+- OpenCode 已真实写入的 patch artifact 会标记为 `applied`，因此可直接 `patch:revert`。
 - 已应用的 patch 必须先 revert，不能直接 reject。
 
 ## 每次开发后验证

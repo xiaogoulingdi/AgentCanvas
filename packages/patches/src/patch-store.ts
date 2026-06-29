@@ -24,7 +24,7 @@ export async function listPatchRecords(input: { eventLog: JsonlEventLog; session
     .map((event) => ({
       sessionId: input.sessionId,
       artifact: event.artifact,
-      status: "proposed" as const,
+      status: initialPatchStatus(event.artifact),
       structured: readDiffs(event.artifact).length > 0
     }));
   const statuses = await readStatuses(input.statusDir);
@@ -36,6 +36,10 @@ export async function listPatchRecords(input: { eventLog: JsonlEventLog; session
 
 function isPatchArtifactEvent(event: AgentEvent): event is ArtifactCreatedEvent {
   return event.type === "artifact.created" && event.artifact.kind === "patch";
+}
+
+function initialPatchStatus(artifact: Artifact): PatchRecord["status"] {
+  return artifact.metadata?.alreadyApplied === true ? "applied" : "proposed";
 }
 
 export async function findPatchRecord(input: { eventLog: JsonlEventLog; sessionId: string; artifactId: string } & PatchStoreOptions): Promise<PatchRecord> {

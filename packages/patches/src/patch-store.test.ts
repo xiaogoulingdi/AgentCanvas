@@ -73,6 +73,35 @@ describe("patch-store", () => {
       await rm(dir, { recursive: true, force: true });
     }
   });
+
+  it("treats already-applied patch artifacts as applied", async () => {
+    const dir = await mkdtemp(join(tmpdir(), "agent-canvas-patch-"));
+    try {
+      const eventLog = new JsonlEventLog(join(dir, "runs"));
+      await eventLog.append(
+        event({
+          type: "artifact.created",
+          nodeId: "coder",
+          artifact: {
+            id: "artifact-applied",
+            kind: "patch",
+            title: "Applied Patch",
+            content: "diff",
+            metadata: {
+              alreadyApplied: true,
+              diffs: [{ file: "README.md", before: "old", after: "new", additions: 1, deletions: 1 }]
+            }
+          }
+        })
+      );
+
+      expect(await listPatchRecords({ eventLog, sessionId: "session-test", statusDir: join(dir, "patches") })).toMatchObject([
+        { status: "applied", structured: true }
+      ]);
+    } finally {
+      await rm(dir, { recursive: true, force: true });
+    }
+  });
 });
 
 function event<T extends Omit<AgentEvent, "id" | "sessionId" | "timestamp">>(input: T): AgentEvent {

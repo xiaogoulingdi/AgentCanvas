@@ -162,6 +162,7 @@ export class OpenCodeBackendAdapter implements AgentBackend {
                 source: "opencode",
                 opencodeSessionId: result.sessionId,
                 diffSource: parsed.diffCount > 0 ? "opencode-sdk" : "git-snapshot",
+                alreadyApplied: true,
                 diffs: effectiveDiffs
               }
             }

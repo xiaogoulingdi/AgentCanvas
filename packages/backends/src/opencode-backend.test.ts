@@ -111,6 +111,7 @@ describe("OpenCodeBackendAdapter", () => {
     expect(artifacts[1]?.metadata).toMatchObject({
       source: "opencode",
       opencodeSessionId: "ses-test",
+      alreadyApplied: true,
       diffs: [{ file: "README.md", before: "old", after: "new" }]
     });
   });
