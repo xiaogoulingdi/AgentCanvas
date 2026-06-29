@@ -3,11 +3,11 @@ import { createId } from "../../../packages/shared/src/ids.ts";
 import { compileWorkflow } from "../../../packages/workflow/src/compiler.ts";
 import type { WorkflowDefinition } from "../../../packages/workflow/src/types.ts";
 import { OpenCodeBackendAdapter } from "../../../packages/backends/src/opencode-backend.ts";
-import { MemoryEventLog } from "../../../packages/events/src/memory-event-log.ts";
 import { runWorkflow } from "../../../packages/runtime/src/run-workflow.ts";
 import { renderTraceText } from "../../../packages/trace/src/render-text.ts";
 import { renderTraceJson } from "../../../packages/trace/src/render-json.ts";
 import type { ExecutionEngine } from "../../../packages/engines/src/types.ts";
+import { createCliEventLog, printSessionFooter } from "./run-log.ts";
 
 const workflowPath = readArg("--workflow") ?? "examples/workflows/research-code.json";
 const prompt = readArg("--prompt");
@@ -29,7 +29,7 @@ if (!prompt) {
 
 const workflow = JSON.parse(await readFile(workflowPath, "utf8")) as WorkflowDefinition;
 const plan = compileWorkflow(workflow);
-const eventLog = new MemoryEventLog();
+const eventLog = createCliEventLog();
 const sessionId = createId("session");
 const engine: ExecutionEngine = {
   id: "opencode",
@@ -46,11 +46,11 @@ try {
     backend: new OpenCodeBackendAdapter({
       directory: process.cwd(),
       providerId,
-    modelId,
-    allowEdits,
-    allowShell,
-    allowNetwork,
-    maxNodes,
+      modelId,
+      allowEdits,
+      allowShell,
+      allowNetwork,
+      maxNodes,
       promptTimeoutMs: timeoutMs
     }),
     eventLog
@@ -62,6 +62,7 @@ try {
 
 const events = await eventLog.list(sessionId);
 console.log(json ? renderTraceJson(events) : renderTraceText(events));
+if (!json) printSessionFooter(sessionId);
 
 function readArg(name: string): string | undefined {
   const index = process.argv.indexOf(name);

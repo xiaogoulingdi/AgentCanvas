@@ -8,11 +8,11 @@ import { formatPreflightIssues, preflightEngineRoutes } from "../../../packages/
 import { ModelBackedBackendAdapter } from "../../../packages/backends/src/model-backed-backend.ts";
 import { createReadOnlyPermissionBroker, createWorkspaceWritePermissionBroker } from "../../../packages/permissions/src/static-permission-broker.ts";
 import { WorkspaceToolBroker } from "../../../packages/tools/src/workspace-tool-broker.ts";
-import { MemoryEventLog } from "../../../packages/events/src/memory-event-log.ts";
 import { runWorkflow } from "../../../packages/runtime/src/run-workflow.ts";
 import { renderTraceText } from "../../../packages/trace/src/render-text.ts";
 import { renderTraceJson } from "../../../packages/trace/src/render-json.ts";
 import type { ExecutionEngine } from "../../../packages/engines/src/types.ts";
+import { createCliEventLog, printSessionFooter } from "./run-log.ts";
 
 const workflowPath = readArg("--workflow") ?? "examples/workflows/research-code.json";
 const enginePath = readArg("--engine") ?? "examples/engines/deepseek-kimi-balanced.json";
@@ -47,7 +47,7 @@ const backend = new ModelBackedBackendAdapter(router, {
       }
     : {})
 });
-const eventLog = new MemoryEventLog();
+const eventLog = createCliEventLog();
 const sessionId = createId("session");
 const engine: ExecutionEngine = {
   id: engineConfig.id,
@@ -66,6 +66,7 @@ await runWorkflow({
 
 const events = await eventLog.list(sessionId);
 console.log(json ? renderTraceJson(events) : renderTraceText(events));
+if (!json) printSessionFooter(sessionId);
 
 function readArg(name: string): string | undefined {
   const index = process.argv.indexOf(name);

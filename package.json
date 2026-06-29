@@ -9,6 +9,8 @@
     "run:fake": "node --experimental-strip-types apps/cli/src/run.ts examples/workflows/research-code.json --prompt \"Analyze this project and propose a safe next step\"",
     "run:model": "node --experimental-strip-types apps/cli/src/run-model.ts",
     "run:opencode": "node --experimental-strip-types apps/cli/src/run-opencode.ts",
+    "run:list": "node --experimental-strip-types apps/cli/src/run-list.ts",
+    "run:inspect": "node --experimental-strip-types apps/cli/src/run-inspect.ts",
     "agent": "node --experimental-strip-types apps/cli/src/agent.ts",
     "file:edit": "node --experimental-strip-types apps/cli/src/edit-file.ts",
     "opencode:health": "node --experimental-strip-types apps/cli/src/opencode-health.ts",

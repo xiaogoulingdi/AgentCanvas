@@ -11,7 +11,6 @@ import { formatPreflightIssues, preflightEngineRoutes } from "../../../packages/
 import { ModelBackedBackendAdapter } from "../../../packages/backends/src/model-backed-backend.ts";
 import { FakeBackendAdapter } from "../../../packages/backends/src/fake-backend.ts";
 import { OpenCodeBackendAdapter } from "../../../packages/backends/src/opencode-backend.ts";
-import { MemoryEventLog } from "../../../packages/events/src/memory-event-log.ts";
 import { projectArtifacts } from "../../../packages/events/src/projections.ts";
 import { runWorkflow } from "../../../packages/runtime/src/run-workflow.ts";
 import { renderTraceText } from "../../../packages/trace/src/render-text.ts";
@@ -19,6 +18,7 @@ import { createReadOnlyPermissionBroker, createWorkspaceWritePermissionBroker } 
 import { WorkspaceToolBroker } from "../../../packages/tools/src/workspace-tool-broker.ts";
 import type { ExecutionEngine } from "../../../packages/engines/src/types.ts";
 import type { AgentBackend } from "../../../packages/backends/src/types.ts";
+import { createCliEventLog } from "./run-log.ts";
 
 type EngineOption =
   | {
@@ -115,7 +115,7 @@ while (true) {
   if (!prompt.trim()) break;
 
   const { backend, engine } = await createRunContext(selectedEngine, selectedWorkflow.path);
-  const eventLog = new MemoryEventLog();
+  const eventLog = createCliEventLog();
   const sessionId = createId("session");
 
   try {
@@ -135,6 +135,8 @@ while (true) {
   console.log("\nTrace");
   console.log("-----");
   console.log(renderTraceText(events));
+  console.log(`\nSession: ${sessionId}`);
+  console.log("Inspect: npm.cmd run run:inspect -- --session-id " + sessionId);
 
   const artifacts = projectArtifacts(events);
   if (artifacts.length > 0) {
