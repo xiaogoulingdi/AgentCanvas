@@ -1,7 +1,8 @@
 import { createId } from "../../shared/src/ids.ts";
 import { createOpenCodeConnection } from "../../opencode/src/client.ts";
-import { parseOpenCodeResult } from "../../opencode/src/result-parser.ts";
+import { parseOpenCodeResult, renderDiffMarkdown } from "../../opencode/src/result-parser.ts";
 import { runOpenCodePrompt } from "../../opencode/src/session-runner.ts";
+import { captureTrackedWorkspaceSnapshot, diffWorkspaceSnapshots } from "../../opencode/src/workspace-diff.ts";
 import { createReadOnlyPermissionBroker, createWorkspaceWritePermissionBroker } from "../../permissions/src/static-permission-broker.ts";
 import type { PermissionBroker } from "../../permissions/src/types.ts";
 import type { AgentBackend, BackendEvent, BackendRunRequest } from "./types.ts";
@@ -92,6 +93,7 @@ export class OpenCodeBackendAdapter implements AgentBackend {
           yield permissionCheckedEvent({ node, scope, ...permission });
         }
 
+        const beforeSnapshot = this.options.allowEdits ? await captureTrackedWorkspaceSnapshot(this.options.directory) : undefined;
         const result = await promptRunner({
           client: connection.client,
           directory: this.options.directory,
@@ -104,6 +106,12 @@ export class OpenCodeBackendAdapter implements AgentBackend {
           ...(this.options.promptTimeoutMs ? { timeoutMs: this.options.promptTimeoutMs } : {})
         });
         const parsed = parseOpenCodeResult(result);
+        const fallbackDiffs =
+          parsed.diffCount > 0 || !beforeSnapshot
+            ? []
+            : diffWorkspaceSnapshots(beforeSnapshot, await captureTrackedWorkspaceSnapshot(this.options.directory));
+        const effectiveDiffs = parsed.diffCount > 0 ? parsed.diffs : fallbackDiffs;
+        const effectiveDiffMarkdown = parsed.diffCount > 0 ? parsed.diffMarkdown : renderDiffMarkdown(fallbackDiffs);
 
         yield {
           type: "backend.session.observed",
@@ -112,10 +120,11 @@ export class OpenCodeBackendAdapter implements AgentBackend {
           externalSessionId: result.sessionId,
           status: parsed.status,
           messageCount: parsed.messageCount,
-          diffCount: parsed.diffCount,
+          diffCount: effectiveDiffs.length,
           metadata: {
             providerId,
-            modelId
+            modelId,
+            diffSource: parsed.diffCount > 0 ? "opencode-sdk" : fallbackDiffs.length > 0 ? "git-snapshot" : "none"
           }
         };
 
@@ -140,7 +149,7 @@ export class OpenCodeBackendAdapter implements AgentBackend {
           }
         };
 
-        if (parsed.diffCount > 0) {
+        if (effectiveDiffs.length > 0) {
           yield {
             type: "artifact.created",
             node,
@@ -148,11 +157,12 @@ export class OpenCodeBackendAdapter implements AgentBackend {
               id: createId("artifact"),
               kind: "patch",
               title: `OpenCode ${node.id} diff`,
-              content: parsed.diffMarkdown,
+              content: effectiveDiffMarkdown,
               metadata: {
                 source: "opencode",
                 opencodeSessionId: result.sessionId,
-                diffs: parsed.diffs
+                diffSource: parsed.diffCount > 0 ? "opencode-sdk" : "git-snapshot",
+                diffs: effectiveDiffs
               }
             }
           };
