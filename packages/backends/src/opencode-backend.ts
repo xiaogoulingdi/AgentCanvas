@@ -106,6 +106,20 @@ export class OpenCodeBackendAdapter implements AgentBackend {
         const parsed = parseOpenCodeResult(result);
 
         yield {
+          type: "backend.session.observed",
+          node,
+          backend: "opencode",
+          externalSessionId: result.sessionId,
+          status: parsed.status,
+          messageCount: parsed.messageCount,
+          diffCount: parsed.diffCount,
+          metadata: {
+            providerId,
+            modelId
+          }
+        };
+
+        yield {
           type: "model.request.completed",
           node,
           model: `${providerId}/${modelId}`,

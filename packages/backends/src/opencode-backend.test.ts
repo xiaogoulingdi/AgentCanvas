@@ -55,10 +55,11 @@ describe("OpenCodeBackendAdapter", () => {
                 total: 13
               }
             },
+            status: "completed",
             parts: [{ type: "text", text: "Implemented change." }]
           }
         },
-        messages: { data: [] },
+        messages: { data: [{ id: "msg-1" }, { id: "msg-2" }] },
         diff: {
           data: [{ file: "README.md", before: "old", after: "new", additions: 1, deletions: 1 }]
         }
@@ -79,6 +80,17 @@ describe("OpenCodeBackendAdapter", () => {
           edit: "deny",
           bash: "deny"
         })
+      })
+    );
+
+    expect(events).toContainEqual(
+      expect.objectContaining({
+        type: "backend.session.observed",
+        backend: "opencode",
+        externalSessionId: "ses-test",
+        status: "completed",
+        messageCount: 2,
+        diffCount: 1
       })
     );
 

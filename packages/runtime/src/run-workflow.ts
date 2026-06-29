@@ -51,6 +51,19 @@ function mapBackendEvent(sessionId: string, event: BackendEvent): AgentEvent[] {
   switch (event.type) {
     case "agent.started":
       return [base(sessionId, { type: "agent.started", nodeId: event.node.id, role: event.node.role })];
+    case "backend.session.observed":
+      return [
+        base(sessionId, {
+          type: "backend.session.observed",
+          nodeId: event.node.id,
+          backend: event.backend,
+          externalSessionId: event.externalSessionId,
+          status: event.status,
+          messageCount: event.messageCount,
+          diffCount: event.diffCount,
+          ...(event.metadata ? { metadata: event.metadata } : {})
+        })
+      ];
     case "model.route.selected":
       return [
         base(sessionId, {

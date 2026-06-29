@@ -4,6 +4,7 @@ export type AgentEvent =
   | WorkflowLoadedEvent
   | WorkflowCompiledEvent
   | AgentStartedEvent
+  | BackendSessionObservedEvent
   | ModelRouteSelectedEvent
   | ModelRequestCompletedEvent
   | PermissionPolicyLoadedEvent
@@ -53,6 +54,17 @@ export type AgentStartedEvent = BaseEvent & {
   type: "agent.started";
   nodeId: string;
   role: string;
+};
+
+export type BackendSessionObservedEvent = BaseEvent & {
+  type: "backend.session.observed";
+  nodeId: string;
+  backend: string;
+  externalSessionId: string;
+  status: "running" | "completed" | "failed" | "unknown";
+  messageCount: number;
+  diffCount: number;
+  metadata?: EventMetadata;
 };
 
 export type ModelRouteSelectedEvent = BaseEvent & {

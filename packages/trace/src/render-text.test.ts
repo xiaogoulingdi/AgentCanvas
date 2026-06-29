@@ -6,6 +6,15 @@ describe("renderTraceText", () => {
   it("renders permission policy and decision details", () => {
     const text = renderTraceText([
       event({
+        type: "backend.session.observed",
+        nodeId: "coder",
+        backend: "opencode",
+        externalSessionId: "ses-test",
+        status: "completed",
+        messageCount: 2,
+        diffCount: 1
+      }),
+      event({
         type: "permission.policy.loaded",
         source: "opencode-tool-policy",
         defaultDecision: "deny",
@@ -24,6 +33,7 @@ describe("renderTraceText", () => {
       })
     ]);
 
+    expect(text).toContain("[backend.session.observed] coder opencode/ses-test status=completed messages=2 diffs=1");
     expect(text).toContain("[permission.policy.loaded] opencode-tool-policy default=deny scopes=2");
     expect(text).toContain("[permission.checked] coder filesystem.patch -> ask");
     expect(text).toContain("matched configured static policy");

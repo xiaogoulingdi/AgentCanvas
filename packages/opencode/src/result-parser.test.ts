@@ -14,11 +14,15 @@ describe("parseOpenCodeResult", () => {
               total: 12
             }
           },
+          status: "completed",
           parts: [
             { type: "reasoning", text: "thinking" },
             { type: "text", text: "OK" }
           ]
         }
+      },
+      messages: {
+        data: [{ id: "msg-1" }, { id: "msg-2" }]
       },
       diff: {
         data: [{ file: "README.md", before: "", after: "OK", additions: 1, deletions: 0 }]
@@ -31,6 +35,8 @@ describe("parseOpenCodeResult", () => {
       outputTokens: 2,
       totalTokens: 12,
       cost: 0.001,
+      messageCount: 2,
+      status: "completed",
       diffCount: 1,
       diffs: [
         {

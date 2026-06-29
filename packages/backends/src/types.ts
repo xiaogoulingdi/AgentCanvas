@@ -22,6 +22,16 @@ export type BackendRunRequest = {
 
 export type BackendEvent =
   | { type: "agent.started"; node: PlanNode }
+  | {
+      type: "backend.session.observed";
+      node: PlanNode;
+      backend: string;
+      externalSessionId: string;
+      status: "running" | "completed" | "failed" | "unknown";
+      messageCount: number;
+      diffCount: number;
+      metadata?: Record<string, unknown>;
+    }
   | { type: "model.route.selected"; node: PlanNode; model: string; reason: string; fallback: string[] }
   | { type: "model.request.completed"; node: PlanNode; model: string; content: string; inputTokens: number; outputTokens: number; estimatedUsd: number }
   | { type: "tool.call.requested"; node: PlanNode; toolName: string }

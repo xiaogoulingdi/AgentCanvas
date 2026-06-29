@@ -4,6 +4,8 @@ export type OpenCodeTextResult = {
   outputTokens: number;
   totalTokens: number;
   cost: number;
+  messageCount: number;
+  status: "completed" | "failed" | "unknown";
   diffCount: number;
   diffs: OpenCodeFileDiff[];
   diffMarkdown: string;
@@ -17,11 +19,12 @@ export type OpenCodeFileDiff = {
   deletions: number;
 };
 
-export function parseOpenCodeResult(result: { message: unknown; diff: unknown }): OpenCodeTextResult {
+export function parseOpenCodeResult(result: { message: unknown; messages?: unknown; diff: unknown }): OpenCodeTextResult {
   const messageData = readData(result.message);
   const parts = readArray(readProp(messageData, "parts"));
   const info = readObject(readProp(messageData, "info"));
   const tokens = readObject(readProp(info, "tokens"));
+  const messageList = readArray(readData(result.messages));
   const diffData = readData(result.diff);
   const diffs = readArray(diffData).map(toFileDiff);
 
@@ -35,6 +38,8 @@ export function parseOpenCodeResult(result: { message: unknown; diff: unknown })
     outputTokens: Number(readProp(tokens, "output") ?? 0),
     totalTokens: Number(readProp(tokens, "total") ?? 0),
     cost: Number(readProp(info, "cost") ?? 0),
+    messageCount: messageList.length,
+    status: readStatus(readObject(messageData)),
     diffCount: diffs.length,
     diffs,
     diffMarkdown: renderDiffMarkdown(diffs)
@@ -102,4 +107,11 @@ function readArray(value: unknown): Record<string, unknown>[] {
 function readProp(value: unknown, key: string): unknown {
   if (!value || typeof value !== "object") return undefined;
   return (value as Record<string, unknown>)[key];
+}
+
+function readStatus(messageData: Record<string, unknown>): "completed" | "failed" | "unknown" {
+  const status = readProp(messageData, "status");
+  if (status === "completed" || status === "done" || status === "success") return "completed";
+  if (status === "failed" || status === "error") return "failed";
+  return "unknown";
 }

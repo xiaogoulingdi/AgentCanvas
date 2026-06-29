@@ -10,6 +10,8 @@ export function renderTraceText(events: AgentEvent[]): string {
         return `[${event.type}] nodes=${event.nodeCount} edges=${event.edgeCount}`;
       case "agent.started":
         return `[${event.type}] ${event.nodeId} role=${event.role}`;
+      case "backend.session.observed":
+        return `[${event.type}] ${event.nodeId} ${event.backend}/${event.externalSessionId} status=${event.status} messages=${event.messageCount} diffs=${event.diffCount}`;
       case "model.route.selected":
         return `[${event.type}] ${event.nodeId} -> ${event.selectedModel} (${event.reason})`;
       case "model.request.completed":
