@@ -1,0 +1,3 @@
+display_name: Agent Canvas UI Design
+short_description: Design Agent Canvas UI surfaces before implementation, with clear model routing, trace, permissions, and Canvas semantics.
+default_prompt: Use this skill to design or revise Agent Canvas UI surfaces before writing frontend code.

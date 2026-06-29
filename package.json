@@ -6,7 +6,12 @@
   "scripts": {
     "check": "tsc --noEmit",
     "test": "vitest run",
-    "run:fake": "node --experimental-strip-types apps/cli/src/run.ts examples/workflows/research-code.json --prompt \"Analyze this project and propose a safe next step\""
+    "run:fake": "node --experimental-strip-types apps/cli/src/run.ts examples/workflows/research-code.json --prompt \"Analyze this project and propose a safe next step\"",
+    "run:model": "node --experimental-strip-types apps/cli/src/run-model.ts",
+    "agent": "node --experimental-strip-types apps/cli/src/agent.ts",
+    "probe:deepseek": "node --experimental-strip-types apps/cli/src/probe-model.ts --provider deepseek",
+    "probe:kimi": "node --experimental-strip-types apps/cli/src/probe-model.ts --provider kimi",
+    "probe:custom": "node --experimental-strip-types apps/cli/src/probe-model.ts --provider custom"
   },
   "devDependencies": {
     "@types/node": "^24.0.0",

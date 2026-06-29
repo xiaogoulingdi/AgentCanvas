@@ -1,0 +1,31 @@
+{
+  "id": "sub2api-balanced",
+  "name": "Sub2API Balanced",
+  "routes": {
+    "default": {
+      "provider": "custom",
+      "model": "gpt-5.4-mini",
+      "reason": "Default to the lower-cost routed model."
+    },
+    "planning": {
+      "provider": "custom",
+      "model": "gpt-5.4-mini",
+      "reason": "Planning uses the mini model for speed and cost."
+    },
+    "research": {
+      "provider": "custom",
+      "model": "gpt-5.4-mini",
+      "reason": "Research uses the mini model for low-risk summarization."
+    },
+    "code": {
+      "provider": "custom",
+      "model": "gpt-5.4",
+      "reason": "Code proposal uses the balanced routed model."
+    },
+    "review": {
+      "provider": "custom",
+      "model": "gpt-5.5",
+      "reason": "Review uses the strongest routed model."
+    }
+  }
+}

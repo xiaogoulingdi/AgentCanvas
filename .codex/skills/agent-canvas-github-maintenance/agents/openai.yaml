@@ -1,0 +1,3 @@
+display_name: Agent Canvas GitHub Maintenance
+short_description: Maintain GitHub workflow, commits, branches, PRs, and repository hygiene for Agent Canvas.
+default_prompt: Use this skill to keep Agent Canvas commits, branches, PRs, .gitignore, and verification workflow clean and predictable.

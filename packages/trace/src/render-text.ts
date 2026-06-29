@@ -12,10 +12,16 @@ export function renderTraceText(events: AgentEvent[]): string {
         return `[${event.type}] ${event.nodeId} role=${event.role}`;
       case "model.route.selected":
         return `[${event.type}] ${event.nodeId} -> ${event.selectedModel} (${event.reason})`;
+      case "model.request.completed":
+        return `[${event.type}] ${event.nodeId} ${event.model}\n  ${formatSnippet(event.content)}`;
+      case "tool.call.completed":
+        return `[${event.type}] ${event.nodeId} ${event.toolName}: ${formatSnippet(event.summary, 180)}`;
       case "cost.updated":
         return `[${event.type}] ${event.nodeId} ${event.model} ~$${event.estimatedUsd.toFixed(4)}`;
       case "artifact.created":
-        return `[${event.type}] ${event.artifact.kind}: ${event.artifact.title}`;
+        return `[${event.type}] ${event.artifact.kind}: ${event.artifact.title}\n  ${formatSnippet(event.artifact.content)}`;
+      case "workflow.failed":
+        return `[${event.type}] ${event.message}`;
       default:
         return `[${event.type}]`;
     }
@@ -23,4 +29,11 @@ export function renderTraceText(events: AgentEvent[]): string {
 
   lines.push(`[trace.cost.total] ~$${projectTotalEstimatedUsd(events).toFixed(4)}`);
   return lines.join("\n");
+}
+
+function formatSnippet(value: string, maxLength = 360): string {
+  const normalized = value.replace(/\s+/g, " ").trim();
+  if (!normalized) return "(empty)";
+  if (normalized.length <= maxLength) return normalized;
+  return `${normalized.slice(0, maxLength - 3)}...`;
 }

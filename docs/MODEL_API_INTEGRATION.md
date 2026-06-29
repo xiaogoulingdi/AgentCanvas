@@ -128,8 +128,8 @@ Protocol adapter 负责：
 第一阶段先做：
 
 1. `FakeBackendAdapter` 跑通闭环。
-2. `ApiProbeAdapter` 只做最小文本调用。
-3. `OpenAICompatibleModelAdapter` 作为自定义 API 的第一实现。
+2. `probe-model` CLI 只做最小文本调用。
+3. `OpenAICompatibleAdapter` 作为自定义 API 的第一实现。
 4. 记录 response shape，不直接依赖某个供应商特性。
 
 暂不做：
@@ -143,12 +143,14 @@ Protocol adapter 负责：
 
 ```bash
 DEEPSEEK_API_KEY=
-DEEPSEEK_BASE_URL=
-DEEPSEEK_MODEL=
+DEEPSEEK_BASE_URL=https://api.deepseek.com
+DEEPSEEK_MODEL=deepseek-v4-flash
+DEEPSEEK_TEMPERATURE=0
 
 KIMI_API_KEY=
-KIMI_BASE_URL=
-KIMI_MODEL=
+KIMI_BASE_URL=https://api.moonshot.ai/v1
+KIMI_MODEL=kimi-k2.6
+KIMI_TEMPERATURE=1
 ```
 
 也可以兼容统一命名：
@@ -165,6 +167,72 @@ AGENT_CANVAS_PROVIDER=
 本仓库不保存 API key。
 
 如果 API key 曾经出现在聊天、日志或截图中，建议后续轮换。
+
+## Probe 命令
+
+PowerShell:
+
+```powershell
+$env:DEEPSEEK_API_KEY="..."
+npm.cmd run probe:deepseek
+
+$env:KIMI_API_KEY="..."
+npm.cmd run probe:kimi
+```
+
+If a Kimi key belongs to the China endpoint, override:
+
+```powershell
+$env:KIMI_BASE_URL="https://api.moonshot.cn/v1"
+npm.cmd run probe:kimi
+```
+
+自定义 OpenAI-compatible API:
+
+```powershell
+$env:AGENT_CANVAS_API_KEY="..."
+$env:AGENT_CANVAS_API_BASE_URL="https://example.com/v1"
+$env:AGENT_CANVAS_MODEL="model-id"
+npm.cmd run probe:custom
+```
+
+Responses API / CC Switch-like router:
+
+```powershell
+$env:AGENT_CANVAS_API_BASE_URL="https://your-responses-router.example/v1"
+$env:AGENT_CANVAS_MODEL="your-responses-model"
+$env:AGENT_CANVAS_WIRE_API="responses"
+$env:AGENT_CANVAS_REASONING_EFFORT="high"
+$env:AGENT_CANVAS_DISABLE_RESPONSE_STORAGE="true"
+npm.cmd run probe:custom
+```
+
+If the router requires a bearer token, also set:
+
+```powershell
+$env:AGENT_CANVAS_API_KEY="..."
+```
+
+If the router expects a different key header:
+
+```powershell
+$env:AGENT_CANVAS_AUTH_HEADER="x-api-key"
+# or:
+$env:AGENT_CANVAS_AUTH_HEADER="x-goog-api-key"
+```
+
+For SUB2 API style routers, prefer:
+
+```powershell
+$env:AGENT_CANVAS_API_BASE_URL="https://your-sub2api-host.example/v1"
+$env:AGENT_CANVAS_MODEL="gpt-5.4-mini"
+$env:AGENT_CANVAS_WIRE_API="responses"
+$env:AGENT_CANVAS_AUTH_HEADER="authorization_bearer"
+$env:AGENT_CANVAS_API_KEY="sk-your-sub2api-key"
+npm.cmd run probe:custom -- --prompt "Reply with OK only."
+```
+
+Use the host root without `/v1` for Anthropic/Claude Code style clients, but use `/v1` for OpenAI-compatible clients and this probe adapter.
 
 ## 与模型性价比策略的关系
 
@@ -187,4 +255,3 @@ type ModelRouteSelected = {
 - 为什么 review 升级到强模型。
 - 这一步花了多少钱。
 - 是否触发 fallback。
-
