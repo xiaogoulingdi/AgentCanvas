@@ -120,7 +120,12 @@ export class OpenCodeBackendAdapter implements AgentBackend {
               id: createId("artifact"),
               kind: "patch",
               title: `OpenCode ${node.id} diff`,
-              content: parsed.diffMarkdown
+              content: parsed.diffMarkdown,
+              metadata: {
+                source: "opencode",
+                opencodeSessionId: result.sessionId,
+                diffs: parsed.diffs
+              }
             }
           };
         }
