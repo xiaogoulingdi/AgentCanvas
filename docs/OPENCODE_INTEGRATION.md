@@ -2,108 +2,72 @@
 
 日期：2026-06-29
 
-Agent Canvas 以 OpenCode 作为主线参考和未来 backend adapter 目标。本阶段已经完成 OpenCode SDK 的最小接入验证。
+Agent Canvas 以 OpenCode 作为主线 backend 参考。本阶段已经完成 SDK 接入、prompt probe、workflow backend、模型列表和 diff artifact 投影。
 
 ## SDK
 
-当前使用：
+当前依赖：
 
 ```text
-@opencode-ai/sdk
+@opencode-ai/sdk@1.17.11
 ```
 
-安装版本：
+SDK 已验证能力：
 
-```text
-1.17.11
-```
-
-SDK 能力包括：
-
-- 启动本地 OpenCode server
-- 连接已有 OpenCode server
-- 查询 project/path/vcs
-- 查询 session
-- 发送 prompt
-- 查询 diff
-- 响应 permission request
-- 文件、搜索、PTY、TUI 等接口
+- 启动本地 OpenCode server。
+- 连接已有 OpenCode server。
+- 读取 project/path/vcs。
+- 创建 session。
+- 发送 prompt。
+- 读取 messages。
+- 读取 diff。
 
 ## 当前实现
 
-位置：
-
 ```text
 packages/opencode/src/client.ts
+packages/opencode/src/session-runner.ts
+packages/opencode/src/result-parser.ts
+packages/backends/src/opencode-backend.ts
 apps/cli/src/opencode-health.ts
+apps/cli/src/opencode-models.ts
+apps/cli/src/opencode-prompt.ts
+apps/cli/src/run-opencode.ts
 ```
 
-命令：
+## Health Check
 
 ```powershell
 npm.cmd run opencode:health
 ```
 
-该命令会：
+该命令会启动或连接 OpenCode server，并读取：
 
-1. 启动或连接 OpenCode server。
-2. 读取当前 project。
-3. 读取 path 信息。
-4. 读取 VCS 信息。
-5. 关闭本进程启动的 server。
-
-## 已验证结果
-
-在当前仓库中，`opencode:health` 已验证通过：
-
-- 能启动 OpenCode server
-- 能识别当前 worktree
-- 能识别 Git 分支
-- 能读取 OpenCode path 配置
+- current project
+- path
+- vcs
 
 ## Model List
 
-精简列出 OpenCode 模型：
+列出 provider 的模型：
 
 ```powershell
-npm.cmd run opencode:models -- --provider opencode --limit 20
+npm.cmd run opencode:models -- --provider deepseek --limit 5
 ```
 
-## Agent Canvas Adapter 方向
-
-建议后续新增：
-
-```text
-packages/backends/src/opencode-backend.ts
-```
-
-职责：
-
-- 把 Agent Canvas workflow node 转成 OpenCode session prompt
-- 把 OpenCode session messages 转成 Agent Canvas event log
-- 把 OpenCode diff 转成 artifact
-- 把 OpenCode permission request 转给 PermissionBroker
-- 把 OpenCode provider/model 配置和 Agent Canvas Engine Selector 对齐
-
-## 暂不直接做的事
-
-当前还不让 OpenCode 自动改项目源文件，原因是：
-
-- 需要先把 permission bridge 做清楚
-- 需要确认 OpenCode session prompt 的返回时机
-- 需要把 diff/artifact/revert 路径纳入 Agent Canvas event log
-
-现在 Agent Canvas 已经有自己的受控 CLI 文件编辑工具，可以先验证文件写入、权限和 artifact 保存链路。
-
-## OpenCode Prompt Probe
-
-命令：
+按关键词搜索：
 
 ```powershell
-npm.cmd run opencode:prompt -- --prompt "Summarize this project in one sentence."
+npm.cmd run opencode:models -- --search kimi --limit 5
 ```
 
-默认会禁用常见 shell/write/edit/patch 工具：
+## Prompt Probe
+
+```powershell
+npm.cmd run opencode:prompt -- --prompt "Reply with OK only." --provider-id deepseek --model-id deepseek-v4-flash
+```
+
+默认禁用常见写入/执行工具：
 
 ```text
 bash=false
@@ -119,18 +83,12 @@ patch=false
 npm.cmd run opencode:prompt -- --prompt "..." --allow-opencode-edits
 ```
 
-可以指定 provider/model：
+## Workflow Backend
+
+Agent Canvas 可以通过 OpenCode backend 跑 workflow：
 
 ```powershell
-npm.cmd run opencode:prompt -- --prompt "..." --provider-id anthropic --model-id claude-sonnet-4-20250514
-```
-
-## OpenCode Backend
-
-Agent Canvas 现在可以通过 OpenCode backend 跑 workflow：
-
-```powershell
-npm.cmd run run:opencode -- --workflow examples/workflows/opencode-single.json --prompt "Reply with OK only."
+npm.cmd run run:opencode -- --workflow examples/workflows/opencode-single.json --prompt "Reply with OK only." --timeout-ms 90000
 ```
 
 默认 provider/model：
@@ -140,29 +98,68 @@ provider: deepseek
 model: deepseek-v4-flash
 ```
 
-默认关闭 OpenCode 写入工具。只有显式传入下面参数才允许 OpenCode edit/write/patch：
+需要环境变量：
 
 ```powershell
-npm.cmd run run:opencode -- --workflow examples/workflows/opencode-single.json --prompt "..." --allow-opencode-edits
+$env:DEEPSEEK_API_KEY="sk-your-deepseek-key"
 ```
 
-默认只跑 1 个 workflow node，避免长 workflow 在免费模型队列中卡住：
+默认只跑 1 个 workflow node，避免长 workflow 卡住：
 
 ```powershell
 npm.cmd run run:opencode -- --workflow examples/workflows/research-code.json --prompt "..." --max-nodes 2 --timeout-ms 90000
 ```
 
-如果 OpenCode provider/model 响应慢或不可用，CLI 会输出 `workflow.failed` trace。当前已确认：
+## Trace Artifacts
 
-- `deepseek/deepseek-v4-flash` 已使用用户提供的测试 API key 成功返回 `OK`。
-- `opencode/deepseek-v4-flash-free` 曾成功返回 `OK`，但免费模型偶发超时，属于外部 provider 队列/服务波动。
-- OpenCode 的 `kimi-for-coding` provider 使用 Kimi Coding API，不等同于 Moonshot 普通 OpenAI-compatible endpoint；当前用户提供的 Kimi key 在该 OpenCode provider 上会返回 401。
-- 超时时不会修改文件，trace 会保留失败节点。
+OpenCode backend 会把 OpenCode 返回内容投影为 Agent Canvas artifact：
+
+- `report`：模型文本输出。
+- `patch`：当 OpenCode 返回 diff 时，生成 markdown diff artifact。
+
+Patch artifact 格式：
+
+````markdown
+### path/to/file
+
+Additions: 1
+Deletions: 1
+
+```diff
+--- a/path/to/file
++++ b/path/to/file
+-old
++new
+```
+````
+
+当前实现会保留 report artifact；如果 OpenCode 返回 diff，会额外生成 patch artifact。
+
+## Kimi 说明
+
+OpenCode 的 `kimi-for-coding` provider 使用 Kimi Coding API：
+
+```text
+https://api.kimi.com/coding/v1/messages
+```
+
+它不等同于 Moonshot 普通 OpenAI-compatible endpoint。当前用户提供的 Kimi key 可用于 Agent Canvas 自己的 Moonshot adapter，但在 OpenCode 的 `kimi-for-coding` provider 上会返回 401。
+
+因此当前建议：
+
+- OpenCode backend 默认走 `deepseek/deepseek-v4-flash`。
+- Kimi 继续走 Agent Canvas 自己的 `kimi` provider profile。
+
+## 安全边界
+
+- 默认不允许 OpenCode 编辑。
+- 默认不执行 shell。
+- 只有显式 `--allow-opencode-edits` 才允许 edit/write/patch 工具。
+- 超时或 provider 错误会进入 `workflow.failed` trace。
 
 ## 下一步
 
-1. 调用 OpenCode `session.create` 创建 session。
-2. 调用 `session.prompt` 或 `session.promptAsync` 发送一个只读任务。
-3. 读取 `session.messages`。
-4. 读取 `session.diff`。
-5. 只在 `--allow-opencode-edits` 显式开启时允许真实编辑。
+1. 把 OpenCode permission request 接到 `PermissionBroker`。
+2. 把 OpenCode diff artifact 接到未来 Canvas trace panel。
+3. 增加 OpenCode session resume / inspect 命令。
+4. 增加更细的 model cost projection。

@@ -5,6 +5,8 @@ import { runOpenCodePrompt } from "../../opencode/src/session-runner.ts";
 import { createReadOnlyPermissionBroker, createWorkspaceWritePermissionBroker } from "../../permissions/src/static-permission-broker.ts";
 import type { PermissionBroker } from "../../permissions/src/types.ts";
 import type { AgentBackend, BackendEvent, BackendRunRequest } from "./types.ts";
+import type { OpenCodeConnection } from "../../opencode/src/client.ts";
+import type { OpenCodePromptInput, OpenCodePromptResult } from "../../opencode/src/session-runner.ts";
 
 export type OpenCodeBackendOptions = {
   directory: string;
@@ -15,7 +17,12 @@ export type OpenCodeBackendOptions = {
   maxNodes?: number;
   promptTimeoutMs?: number;
   permissionBroker?: PermissionBroker;
+  connectionFactory?: OpenCodeConnectionFactory;
+  promptRunner?: OpenCodePromptRunner;
 };
+
+export type OpenCodeConnectionFactory = (input: { baseUrl?: string; hostname?: string; timeout?: number }) => Promise<OpenCodeConnection>;
+export type OpenCodePromptRunner = (input: OpenCodePromptInput) => Promise<OpenCodePromptResult>;
 
 export class OpenCodeBackendAdapter implements AgentBackend {
   private readonly options: OpenCodeBackendOptions;
@@ -36,7 +43,9 @@ export class OpenCodeBackendAdapter implements AgentBackend {
   }
 
   async *run(request: BackendRunRequest): AsyncIterable<BackendEvent> {
-    const connection = await createOpenCodeConnection({
+    const connectionFactory = this.options.connectionFactory ?? createOpenCodeConnection;
+    const promptRunner = this.options.promptRunner ?? runOpenCodePrompt;
+    const connection = await connectionFactory({
       ...(this.options.baseUrl ? { baseUrl: this.options.baseUrl } : { hostname: "127.0.0.1", timeout: 10000 })
     });
 
@@ -59,7 +68,7 @@ export class OpenCodeBackendAdapter implements AgentBackend {
           yield { type: "permission.checked", node, scope, decision };
         }
 
-        const result = await runOpenCodePrompt({
+        const result = await promptRunner({
           client: connection.client,
           directory: this.options.directory,
           prompt: buildOpenCodeNodePrompt(request.prompt, node.role),
@@ -86,11 +95,24 @@ export class OpenCodeBackendAdapter implements AgentBackend {
           node,
           artifact: {
             id: createId("artifact"),
-            kind: parsed.diffCount > 0 ? "patch" : "report",
+            kind: "report",
             title: `OpenCode ${node.id} result`,
             content: parsed.text || "OpenCode returned no text output."
           }
         };
+
+        if (parsed.diffCount > 0) {
+          yield {
+            type: "artifact.created",
+            node,
+            artifact: {
+              id: createId("artifact"),
+              kind: "patch",
+              title: `OpenCode ${node.id} diff`,
+              content: parsed.diffMarkdown
+            }
+          };
+        }
 
         yield { type: "agent.completed", node, status: "completed" };
       }

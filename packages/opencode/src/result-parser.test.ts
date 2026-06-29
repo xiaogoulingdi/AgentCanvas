@@ -31,7 +31,17 @@ describe("parseOpenCodeResult", () => {
       outputTokens: 2,
       totalTokens: 12,
       cost: 0.001,
-      diffCount: 1
+      diffCount: 1,
+      diffs: [
+        {
+          file: "README.md",
+          before: "",
+          after: "OK",
+          additions: 1,
+          deletions: 0
+        }
+      ],
+      diffMarkdown: ["### README.md", "", "Additions: 1", "Deletions: 0", "", "```diff", "--- a/README.md", "+++ b/README.md", "+OK", "```"].join("\n")
     });
   });
 });
