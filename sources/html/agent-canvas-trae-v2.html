@@ -1,0 +1,873 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Agent Canvas Trae-style V2</title>
+  <style>
+    :root {
+      --app: #f4f4f4;
+      --surface: #ffffff;
+      --rail: #eeeeee;
+      --line: #e5e5e5;
+      --line-strong: #d8d8d8;
+      --hover: #e7e7e7;
+      --text: #111111;
+      --muted: #8a8f98;
+      --soft: #f7f7f7;
+      --accent: #735cff;
+      --accent-soft: #ece9ff;
+      --green: #10a37f;
+      --blue: #3578ff;
+      --amber: #bd7b18;
+      --rose: #bf5968;
+      --shadow: 0 10px 30px rgba(0, 0, 0, .08);
+    }
+
+    * { box-sizing: border-box; }
+
+    html,
+    body {
+      margin: 0;
+      background: #dedede;
+      color: var(--text);
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    }
+
+    body {
+      display: grid;
+      gap: 32px;
+      padding: 32px;
+    }
+
+    .scene {
+      width: 1920px;
+      height: 1080px;
+      overflow: hidden;
+      background: var(--app);
+      border: 1px solid #d7d7d7;
+      position: relative;
+    }
+
+    .windowbar {
+      height: 56px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 18px 0 26px;
+      background: var(--app);
+    }
+
+    .mode-tabs {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+    }
+
+    .mode {
+      height: 32px;
+      padding: 0 12px;
+      display: inline-flex;
+      align-items: center;
+      gap: 7px;
+      border-radius: 7px;
+      color: #111;
+      font-size: 14px;
+      border: 1px solid transparent;
+    }
+
+    .mode.active {
+      background: #fff;
+      border-color: #d2d2d2;
+      box-shadow: 0 1px 2px rgba(0,0,0,.04);
+    }
+
+    .menu {
+      display: flex;
+      align-items: center;
+      gap: 24px;
+      margin-left: 24px;
+      color: #555;
+      font-size: 14px;
+    }
+
+    .traffic {
+      display: flex;
+      gap: 18px;
+      color: #222;
+      font-size: 15px;
+    }
+
+    .app {
+      display: grid;
+      grid-template-columns: 300px 1fr;
+      height: calc(100% - 56px);
+    }
+
+    .sidebar {
+      padding: 8px 12px 16px;
+      background: var(--rail);
+      position: relative;
+    }
+
+    .nav-item {
+      height: 34px;
+      border-radius: 7px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 0 9px;
+      color: #111;
+      font-size: 14px;
+    }
+
+    .nav-item.active { background: #dedede; }
+
+    .nav-section {
+      margin: 28px 7px 10px;
+      color: #444;
+      font-size: 14px;
+    }
+
+    .task-row {
+      height: 30px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 0 8px;
+      border-radius: 7px;
+      color: #555;
+      font-size: 13px;
+    }
+
+    .task-row.current {
+      color: #111;
+      background: #e2e2e2;
+      font-weight: 500;
+    }
+
+    .user {
+      position: absolute;
+      bottom: 10px;
+      left: 16px;
+      right: 16px;
+      height: 32px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      color: #111;
+      font-size: 13px;
+    }
+
+    .avatar {
+      width: 26px;
+      height: 26px;
+      border-radius: 6px;
+      background: #cc8cff;
+    }
+
+    .free {
+      margin-left: auto;
+      padding: 2px 5px;
+      border-radius: 4px;
+      background: #fff;
+      font-size: 11px;
+    }
+
+    .stage {
+      margin: 0 8px 8px 0;
+      background: var(--surface);
+      border: 1px solid var(--line);
+      border-radius: 15px;
+      height: calc(100% - 8px);
+      overflow: hidden;
+      position: relative;
+    }
+
+    .stage.inner-grid {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) 320px;
+    }
+
+    .center-home {
+      height: 100%;
+      display: grid;
+      place-items: center;
+      padding-bottom: 80px;
+    }
+
+    .hero {
+      width: 830px;
+      display: grid;
+      justify-items: center;
+      gap: 34px;
+    }
+
+    .headline {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      font-size: 34px;
+      font-weight: 680;
+      letter-spacing: 0;
+    }
+
+    .prompt {
+      width: 800px;
+      height: 132px;
+      border: 1px solid var(--line-strong);
+      border-radius: 14px;
+      background: #fff;
+      box-shadow: 0 1px 2px rgba(0,0,0,.02);
+      overflow: hidden;
+    }
+
+    .prompt-text {
+      height: 82px;
+      padding: 15px 17px;
+      color: #a1a6af;
+      font-size: 14px;
+    }
+
+    .prompt-actions {
+      height: 50px;
+      display: flex;
+      align-items: center;
+      padding: 0 12px;
+      gap: 16px;
+    }
+
+    .tiny-icon {
+      width: 18px;
+      height: 18px;
+      border-radius: 4px;
+      display: inline-grid;
+      place-items: center;
+      color: #222;
+      font-size: 13px;
+    }
+
+    .spacer { flex: 1; }
+
+    .model-pill {
+      height: 32px;
+      padding: 0 11px;
+      display: inline-flex;
+      align-items: center;
+      gap: 7px;
+      border-radius: 8px;
+      background: #f1f1f1;
+      color: #111;
+      font-size: 13px;
+      border: 1px solid transparent;
+    }
+
+    .send {
+      width: 34px;
+      height: 34px;
+      display: grid;
+      place-items: center;
+      border-radius: 9px;
+      background: #e1d9ff;
+      color: var(--accent);
+      font-size: 18px;
+    }
+
+    .context-row {
+      width: 800px;
+      height: 44px;
+      display: flex;
+      align-items: center;
+      gap: 18px;
+      padding: 0 18px;
+      background: #f3f3f3;
+      border-radius: 0 0 13px 13px;
+      margin-top: -34px;
+      color: #111;
+      font-size: 13px;
+    }
+
+    .quick-actions {
+      display: flex;
+      gap: 12px;
+      justify-content: center;
+      margin-top: -2px;
+    }
+
+    .quick {
+      height: 52px;
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 0 18px;
+      border: 1px solid var(--line);
+      border-radius: 14px;
+      background: #fff;
+      color: #111;
+      font-size: 14px;
+    }
+
+    .popover {
+      position: absolute;
+      width: 296px;
+      background: #fff;
+      border: 1px solid var(--line);
+      border-radius: 10px;
+      box-shadow: var(--shadow);
+      overflow: hidden;
+      z-index: 4;
+    }
+
+    .pop-section {
+      padding: 9px 8px 5px;
+      color: #7e838c;
+      font-size: 12px;
+    }
+
+    .pop-row {
+      height: 36px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 0 10px;
+      color: #222;
+      font-size: 13px;
+    }
+
+    .pop-row.active {
+      margin: 0 6px;
+      border-radius: 7px;
+      background: #f0f0f0;
+      padding: 0 8px;
+    }
+
+    .pop-row strong {
+      font-weight: 650;
+    }
+
+    .check {
+      margin-left: auto;
+      color: var(--accent);
+      font-weight: 700;
+    }
+
+    .model-sub {
+      margin-left: auto;
+      color: #8a8f98;
+      font-size: 11px;
+    }
+
+    .divider {
+      height: 1px;
+      background: var(--line);
+      margin: 6px 0;
+    }
+
+    .canvas-shell {
+      height: 100%;
+      display: grid;
+      grid-template-rows: 48px 1fr;
+    }
+
+    .taskbar {
+      height: 48px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 16px;
+      border-bottom: 1px solid var(--line);
+      font-size: 14px;
+    }
+
+    .task-title {
+      display: flex;
+      align-items: center;
+      gap: 9px;
+      font-weight: 650;
+    }
+
+    .task-actions {
+      display: flex;
+      gap: 8px;
+      align-items: center;
+    }
+
+    .small-btn {
+      height: 30px;
+      padding: 0 10px;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      border-radius: 7px;
+      border: 1px solid var(--line);
+      background: #fff;
+      color: #222;
+      font-size: 12px;
+    }
+
+    .small-btn.dark {
+      border-color: #111;
+      background: #111;
+      color: #fff;
+    }
+
+    .work-area {
+      position: relative;
+      background:
+        radial-gradient(circle at 1px 1px, #ededed 1px, transparent 0),
+        #fff;
+      background-size: 24px 24px;
+    }
+
+    .node {
+      position: absolute;
+      width: 224px;
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      background: #fff;
+      box-shadow: 0 8px 24px rgba(0,0,0,.05);
+      overflow: hidden;
+    }
+
+    .node-head {
+      height: 46px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 0 13px;
+      border-bottom: 1px solid var(--line);
+      font-size: 13px;
+      font-weight: 650;
+    }
+
+    .node-body {
+      padding: 12px 13px;
+      display: grid;
+      gap: 8px;
+      color: #666;
+      font-size: 12px;
+    }
+
+    .node-row {
+      display: flex;
+      justify-content: space-between;
+      gap: 12px;
+    }
+
+    .badge {
+      height: 20px;
+      padding: 0 7px;
+      display: inline-flex;
+      align-items: center;
+      border-radius: 6px;
+      background: #f4f4f4;
+      color: #555;
+      font-size: 11px;
+    }
+
+    .connectors {
+      position: absolute;
+      inset: 0;
+      pointer-events: none;
+    }
+
+    .right-panel {
+      border-left: 1px solid var(--line);
+      padding: 18px 24px;
+      background: #fff;
+    }
+
+    .side-block {
+      border-bottom: 1px solid var(--line);
+      padding: 0 0 22px;
+      margin-bottom: 24px;
+    }
+
+    .side-title {
+      color: #555;
+      font-size: 14px;
+      margin-bottom: 16px;
+    }
+
+    .todo {
+      display: grid;
+      gap: 14px;
+      font-size: 13px;
+    }
+
+    .todo-row {
+      display: flex;
+      gap: 9px;
+      align-items: flex-start;
+      line-height: 1.35;
+    }
+
+    .ok {
+      width: 15px;
+      height: 15px;
+      border-radius: 50%;
+      border: 2px solid var(--green);
+      margin-top: 1px;
+    }
+
+    .artifact-empty {
+      height: 116px;
+      display: grid;
+      place-items: center;
+      color: #9aa0a8;
+      font-size: 13px;
+      text-align: center;
+    }
+
+    .main-report {
+      padding: 44px 0 0;
+      max-width: 900px;
+      margin: 0 auto;
+      font-size: 14px;
+      line-height: 1.8;
+    }
+
+    .report-title {
+      font-size: 18px;
+      font-weight: 700;
+      margin-bottom: 20px;
+    }
+
+    .inline-code {
+      font-family: "SFMono-Regular", Consolas, monospace;
+      background: #f0f0f0;
+      border-radius: 4px;
+      padding: 1px 4px;
+    }
+
+    .summary-card {
+      margin-top: 28px;
+      height: 58px;
+      border: 1px solid var(--line);
+      border-radius: 11px;
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      padding: 0 17px;
+      background: #fff;
+    }
+
+    .bottom-composer {
+      position: absolute;
+      left: 50%;
+      bottom: 16px;
+      transform: translateX(-50%);
+      width: 860px;
+      height: 138px;
+      border: 1px solid var(--line-strong);
+      border-radius: 14px;
+      background: #fff;
+      overflow: hidden;
+    }
+
+    .bottom-composer .prompt-text { height: 84px; }
+
+    .scene-note {
+      position: absolute;
+      right: 20px;
+      bottom: 12px;
+      color: #b0b0b0;
+      font-size: 12px;
+    }
+  </style>
+</head>
+<body>
+  <section class="scene" id="scene-code-home">
+    <div class="windowbar">
+      <div style="display:flex; align-items:center;">
+        <div class="mode-tabs">
+          <div class="mode">Work</div>
+          <div class="mode active">⌘ Code</div>
+          <div class="mode">Design</div>
+        </div>
+        <div class="menu"><span>▯</span><span>Edit</span><span>Help</span></div>
+      </div>
+      <div class="traffic"><span>−</span><span>□</span><span>×</span></div>
+    </div>
+    <div class="app">
+      <aside class="sidebar">
+        <div class="nav-item active">⊕ New Task</div>
+        <div class="nav-item">◧ Skills</div>
+        <div class="nav-item">◴ Automation</div>
+        <div class="nav-section">Task List</div>
+        <div class="task-row">▢ glass-site-kim</div>
+        <div class="task-row current">UI clone with agents</div>
+        <div class="user"><div class="avatar"></div><span>User 79947090048</span><span class="free">Free</span></div>
+      </aside>
+      <main class="stage">
+        <div class="center-home">
+          <div class="hero">
+            <div class="headline"><span>⌘</span><span>Code with Agent Canvas</span></div>
+            <div>
+              <div class="prompt">
+                <div class="prompt-text">Ask Agent Canvas to write code, inspect pages, route models, or run a multi-agent workflow.</div>
+                <div class="prompt-actions">
+                  <span class="tiny-icon">▣</span>
+                  <span class="tiny-icon">⌁</span>
+                  <span class="tiny-icon" style="color:#999;">⚡ Fast</span>
+                  <span class="spacer"></span>
+                  <span class="model-pill">Agent Canvas Auto⌄</span>
+                  <span class="tiny-icon">⌕</span>
+                  <span class="tiny-icon">≋</span>
+                  <span class="send">↑</span>
+                </div>
+              </div>
+              <div class="context-row"><span>▱ Local</span><span>⌁ glass-site-kim</span><span style="color:var(--accent);">＋ Select folder</span></div>
+            </div>
+            <div class="quick-actions">
+              <div class="quick">◉ UI Clone</div>
+              <div class="quick">◎ Web Read</div>
+              <div class="quick">⌘ AST Analyze</div>
+              <div class="quick">▣ Run Tests</div>
+            </div>
+          </div>
+        </div>
+        <div class="scene-note">01 · Code entry with workflow model</div>
+      </main>
+    </div>
+  </section>
+
+  <section class="scene" id="scene-model-menu">
+    <div class="windowbar">
+      <div style="display:flex; align-items:center;">
+        <div class="mode-tabs">
+          <div class="mode">Work</div>
+          <div class="mode active">⌘ Code</div>
+          <div class="mode">Design</div>
+        </div>
+        <div class="menu"><span>▯</span><span>Edit</span><span>Help</span></div>
+      </div>
+      <div class="traffic"><span>−</span><span>□</span><span>×</span></div>
+    </div>
+    <div class="app">
+      <aside class="sidebar">
+        <div class="nav-item active">⊕ New Task</div>
+        <div class="nav-item">◧ Skills</div>
+        <div class="nav-item">◴ Automation</div>
+        <div class="nav-section">Task List</div>
+        <div class="task-row">▢ glass-site-kim</div>
+        <div class="task-row current">UI clone with agents</div>
+        <div class="user"><div class="avatar"></div><span>User 79947090048</span><span class="free">Free</span></div>
+      </aside>
+      <main class="stage">
+        <div class="center-home">
+          <div class="hero">
+            <div class="headline"><span>⌘</span><span>Code with Agent Canvas</span></div>
+            <div>
+              <div class="prompt">
+                <div class="prompt-text">Recreate this page. Use vision only when screenshots are needed, and keep code edits on the cheap route.</div>
+                <div class="prompt-actions">
+                  <span class="tiny-icon">▣</span>
+                  <span class="tiny-icon">⌁</span>
+                  <span class="tiny-icon" style="color:#999;">⚡ Fast</span>
+                  <span class="spacer"></span>
+                  <span class="model-pill">Agent Canvas Auto⌄</span>
+                  <span class="tiny-icon">⌕</span>
+                  <span class="tiny-icon">≋</span>
+                  <span class="send">↑</span>
+                </div>
+              </div>
+              <div class="context-row"><span>▱ Local</span><span>⌁ glass-site-kim</span><span style="color:var(--accent);">＋ Select folder</span></div>
+            </div>
+            <div class="quick-actions">
+              <div class="quick">◉ UI Clone</div>
+              <div class="quick">◎ Web Read</div>
+              <div class="quick">⌘ AST Analyze</div>
+              <div class="quick">▣ Run Tests</div>
+            </div>
+          </div>
+        </div>
+        <div class="popover" style="left: 1138px; top: 505px;">
+          <div class="pop-section">Workflow models</div>
+          <div class="pop-row active"><span>◇</span><strong>Agent Canvas Auto</strong><span class="check">✓</span></div>
+          <div class="pop-row"><span>◉</span><span>UI Clone Team</span><span class="model-sub">vision + code</span></div>
+          <div class="pop-row"><span>◎</span><span>Research + Code</span><span class="model-sub">web + repo</span></div>
+          <div class="pop-row"><span>⌘</span><span>Review Pipeline</span><span class="model-sub">test + diff</span></div>
+          <div class="divider"></div>
+          <div class="pop-section">Single models</div>
+          <div class="pop-row"><span>◆</span><span>DeepSeek-V4-Flash</span></div>
+          <div class="pop-row"><span>K</span><span>Kimi-K2.7-Code</span></div>
+          <div class="pop-row"><span>G</span><span>GLM-4.5</span></div>
+          <div class="pop-row"><span>O</span><span>OpenAI Vision</span></div>
+          <div class="divider"></div>
+          <div class="pop-row"><span>⚙</span><span>Configure routing engine</span></div>
+        </div>
+        <div class="scene-note">02 · Unified model and workflow selector</div>
+      </main>
+    </div>
+  </section>
+
+  <section class="scene" id="scene-canvas-expanded">
+    <div class="windowbar">
+      <div style="display:flex; align-items:center;">
+        <div class="mode-tabs">
+          <div class="mode">Work</div>
+          <div class="mode active">⌘ Code</div>
+          <div class="mode">Design</div>
+        </div>
+        <div class="menu"><span>▯</span><span>Edit</span><span>Help</span></div>
+      </div>
+      <div class="traffic"><span>−</span><span>□</span><span>×</span></div>
+    </div>
+    <div class="app">
+      <aside class="sidebar">
+        <div class="nav-item">⊕ New Task</div>
+        <div class="nav-item active">◧ Skills</div>
+        <div class="nav-item">◴ Automation</div>
+        <div class="nav-section">Task List</div>
+        <div class="task-row">▢ glass-site-kim</div>
+        <div class="task-row current">UI clone with agents</div>
+        <div class="user"><div class="avatar"></div><span>User 79947090048</span><span class="free">Free</span></div>
+      </aside>
+      <main class="stage">
+        <div class="canvas-shell">
+          <div class="taskbar">
+            <div class="task-title"><span>◉</span><span>UI Clone Team</span><span class="badge">Agent Canvas Auto</span></div>
+            <div class="task-actions"><div class="small-btn">Preview prompt</div><div class="small-btn">Budget $12/day</div><div class="small-btn dark">Run</div></div>
+          </div>
+          <div class="work-area">
+            <svg class="connectors" viewBox="0 0 1610 976">
+              <path d="M335 448 C455 448 455 250 588 250" fill="none" stroke="#c7c7c7" stroke-width="2.2"/>
+              <path d="M335 448 C455 448 455 448 588 448" fill="none" stroke="#c7c7c7" stroke-width="2.2"/>
+              <path d="M335 448 C455 448 455 646 588 646" fill="none" stroke="#c7c7c7" stroke-width="2.2"/>
+              <path d="M812 250 C980 250 980 448 1136 448" fill="none" stroke="#c7c7c7" stroke-width="2.2"/>
+              <path d="M812 448 C980 448 980 448 1136 448" fill="none" stroke="#c7c7c7" stroke-width="2.2"/>
+              <path d="M812 646 C980 646 980 448 1136 448" fill="none" stroke="#c7c7c7" stroke-width="2.2"/>
+            </svg>
+            <div class="node" style="left:132px; top:386px;">
+              <div class="node-head">◇ Controller</div>
+              <div class="node-body">
+                <div class="node-row"><span>Model</span><span class="badge">GLM</span></div>
+                <div class="node-row"><span>Role</span><span>route + plan</span></div>
+                <div class="node-row"><span>Policy</span><span>cost first</span></div>
+              </div>
+            </div>
+            <div class="node" style="left:588px; top:188px;">
+              <div class="node-head">◉ Vision Agent</div>
+              <div class="node-body">
+                <div class="node-row"><span>Model</span><span class="badge">OpenAI</span></div>
+                <div class="node-row"><span>Trigger</span><span>screenshot only</span></div>
+                <div class="node-row"><span>Input</span><span>crop</span></div>
+              </div>
+            </div>
+            <div class="node" style="left:588px; top:386px;">
+              <div class="node-head">⌘ Code Agent</div>
+              <div class="node-body">
+                <div class="node-row"><span>Model</span><span class="badge">DeepSeek</span></div>
+                <div class="node-row"><span>Tools</span><span>repo edit</span></div>
+                <div class="node-row"><span>Mode</span><span>patch</span></div>
+              </div>
+            </div>
+            <div class="node" style="left:588px; top:584px;">
+              <div class="node-head">▣ AST Agent</div>
+              <div class="node-body">
+                <div class="node-row"><span>Model</span><span class="badge">Tools</span></div>
+                <div class="node-row"><span>Parser</span><span>tree-sitter</span></div>
+                <div class="node-row"><span>Calls</span><span>minimal</span></div>
+              </div>
+            </div>
+            <div class="node" style="left:1136px; top:386px;">
+              <div class="node-head">◎ Reviewer</div>
+              <div class="node-body">
+                <div class="node-row"><span>Model</span><span class="badge">Auto</span></div>
+                <div class="node-row"><span>Checks</span><span>visual diff</span></div>
+                <div class="node-row"><span>Output</span><span>summary</span></div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="scene-note">03 · Canvas expands inside Code mode</div>
+      </main>
+    </div>
+  </section>
+
+  <section class="scene" id="scene-running">
+    <div class="windowbar">
+      <div style="display:flex; align-items:center;">
+        <div class="mode-tabs">
+          <div class="mode active">Work</div>
+          <div class="mode">⌘ Code</div>
+          <div class="mode">Design</div>
+        </div>
+        <div class="menu"><span>▯</span><span>Edit</span><span>Help</span></div>
+      </div>
+      <div class="traffic"><span>−</span><span>□</span><span>×</span></div>
+    </div>
+    <div class="app">
+      <aside class="sidebar">
+        <div class="nav-item">⊕ New Task</div>
+        <div class="nav-item">◧ Skills</div>
+        <div class="nav-item active">◴ Automation</div>
+        <div class="nav-section">Task List</div>
+        <div class="task-row">▢ glass-site-kim</div>
+        <div class="task-row current">UI clone with agents</div>
+        <div class="user"><div class="avatar"></div><span>User 79947090048</span><span class="free">Free</span></div>
+      </aside>
+      <main class="stage inner-grid">
+        <section style="position:relative;">
+          <div class="taskbar">
+            <div class="task-title"><span>复制网站玻璃光效与材质</span><span class="badge">UI Clone Team</span></div>
+            <div class="task-actions"><div class="small-btn">Open Canvas</div><div class="small-btn dark">Approve</div></div>
+          </div>
+          <div class="main-report">
+            <div class="report-title">Agent Canvas completed the UI clone plan</div>
+            <p><strong>1. Vision pass</strong> used one cropped screenshot to extract spacing, hierarchy, and glass material cues.</p>
+            <p><strong>2. AST analysis</strong> mapped <span class="inline-code">page.tsx</span>, <span class="inline-code">GlassText</span>, and shared style tokens without calling a model.</p>
+            <p><strong>3. Code route</strong> sent implementation work to <span class="inline-code">DeepSeek-V4-Flash</span>, while visual QA stayed on the vision model.</p>
+            <p><strong>4. Review</strong> compared the browser preview against the target and generated a small patch summary.</p>
+            <div class="summary-card">
+              <span style="font-size:22px;">▣</span>
+              <strong>3 files changed</strong>
+              <span style="color:#888;">·</span>
+              <span>Vision calls: 2</span>
+              <span style="color:#888;">·</span>
+              <span>Total cost: $0.46</span>
+            </div>
+            <p style="color:var(--green); margin-top:18px;">● Task completed</p>
+          </div>
+          <div class="bottom-composer">
+            <div class="prompt-text">Ask a follow-up, adjust the workflow model, or open the canvas to edit agent routing.</div>
+            <div class="prompt-actions">
+              <span class="tiny-icon">▣</span>
+              <span class="tiny-icon">⌁</span>
+              <span class="tiny-icon" style="color:#999;">⚡ Fast</span>
+              <span class="spacer"></span>
+              <span class="model-pill">UI Clone Team⌄</span>
+              <span class="send">↑</span>
+            </div>
+          </div>
+        </section>
+        <aside class="right-panel">
+          <div class="side-block">
+            <div class="side-title">Pending</div>
+            <div class="todo">
+              <div class="todo-row"><span class="ok"></span><span>Read browser console errors</span></div>
+              <div class="todo-row"><span class="ok"></span><span>Route code edits to DeepSeek</span></div>
+              <div class="todo-row"><span class="ok"></span><span>Run visual diff with Vision Agent</span></div>
+              <div class="todo-row"><span class="ok"></span><span>Generate final artifact summary</span></div>
+            </div>
+          </div>
+          <div class="side-block">
+            <div class="side-title">Artifacts</div>
+            <div class="artifact-empty">▣<br>Generated files will appear here</div>
+          </div>
+          <div class="side-block">
+            <div class="side-title">Reference</div>
+            <div class="todo">
+              <div class="todo-row"><span>◧</span><span>Vision Agent screenshot crop</span></div>
+              <div class="todo-row"><span>⌘</span><span>AST component map</span></div>
+              <div class="todo-row"><span>◎</span><span>Model routing engine</span></div>
+            </div>
+          </div>
+        </aside>
+        <div class="scene-note">04 · Running task with agent trace</div>
+      </main>
+    </div>
+  </section>
+</body>
+</html>

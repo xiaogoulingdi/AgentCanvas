@@ -1,0 +1,54 @@
+{
+  "id": "research-code",
+  "name": "Research + Code",
+  "version": "0.1.0",
+  "entry": "supervisor",
+  "limits": {
+    "maxSteps": 20,
+    "maxDiscussionRounds": 3,
+    "maxEstimatedUsd": 1,
+    "maxRuntimeSeconds": 300
+  },
+  "nodes": {
+    "supervisor": {
+      "type": "agent",
+      "role": "supervisor",
+      "route": "planning",
+      "tools": ["project_search"],
+      "permissions": ["filesystem.read", "model.cost"]
+    },
+    "researcher": {
+      "type": "agent",
+      "role": "researcher",
+      "route": "research",
+      "tools": ["project_search", "read_file"],
+      "permissions": ["filesystem.read"]
+    },
+    "coder": {
+      "type": "agent",
+      "role": "coder",
+      "route": "code",
+      "tools": ["read_file", "propose_patch"],
+      "permissions": ["filesystem.read", "filesystem.patch"]
+    },
+    "reviewer": {
+      "type": "agent",
+      "role": "reviewer",
+      "route": "review",
+      "tools": ["diff", "fake_test"],
+      "permissions": ["filesystem.read"]
+    }
+  },
+  "edges": [
+    { "from": "supervisor", "to": "researcher" },
+    { "from": "researcher", "to": "coder" },
+    { "from": "coder", "to": "reviewer" }
+  ],
+  "discussions": [
+    {
+      "participants": ["coder", "reviewer"],
+      "maxRounds": 3,
+      "stopWhen": "review_passed"
+    }
+  ]
+}

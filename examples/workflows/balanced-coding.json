@@ -1,0 +1,46 @@
+{
+  "id": "balanced-coding",
+  "name": "Balanced Coding",
+  "version": "0.1.0",
+  "entry": "planner",
+  "limits": {
+    "maxSteps": 12,
+    "maxDiscussionRounds": 2,
+    "maxEstimatedUsd": 1,
+    "maxRuntimeSeconds": 240
+  },
+  "nodes": {
+    "planner": {
+      "type": "agent",
+      "role": "planner",
+      "route": "planning",
+      "tools": ["project_search"],
+      "permissions": ["filesystem.read", "model.cost"]
+    },
+    "coder": {
+      "type": "agent",
+      "role": "coder",
+      "route": "code",
+      "tools": ["read_file", "propose_patch"],
+      "permissions": ["filesystem.read", "filesystem.patch"]
+    },
+    "reviewer": {
+      "type": "agent",
+      "role": "reviewer",
+      "route": "review",
+      "tools": ["diff"],
+      "permissions": ["filesystem.read"]
+    }
+  },
+  "edges": [
+    { "from": "planner", "to": "coder" },
+    { "from": "coder", "to": "reviewer" }
+  ],
+  "discussions": [
+    {
+      "participants": ["coder", "reviewer"],
+      "maxRounds": 2,
+      "stopWhen": "review_passed"
+    }
+  ]
+}

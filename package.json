@@ -1,0 +1,16 @@
+{
+  "name": "agent-canvas",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "check": "tsc --noEmit",
+    "test": "vitest run",
+    "run:fake": "node --experimental-strip-types apps/cli/src/run.ts examples/workflows/research-code.json --prompt \"Analyze this project and propose a safe next step\""
+  },
+  "devDependencies": {
+    "@types/node": "^24.0.0",
+    "typescript": "^5.8.0",
+    "vitest": "^3.2.0"
+  }
+}

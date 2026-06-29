@@ -1,0 +1,725 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Agent Canvas Mockups</title>
+  <style>
+    :root {
+      --bg: #f7f5f0;
+      --rail: #efede6;
+      --panel: #fffefa;
+      --panel2: #fbfaf7;
+      --ink: #232323;
+      --muted: #6f6a61;
+      --soft: #e6e0d6;
+      --line: #d6d0c4;
+      --green: #2d946b;
+      --blue: #4f73d9;
+      --amber: #b67821;
+      --rose: #bf5968;
+      --purple: #715bc8;
+    }
+
+    * { box-sizing: border-box; }
+
+    html,
+    body {
+      margin: 0;
+      background: #e8e3da;
+      color: var(--ink);
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    }
+
+    body {
+      display: grid;
+      gap: 36px;
+      padding: 36px;
+    }
+
+    .scene {
+      width: 1440px;
+      height: 900px;
+      overflow: hidden;
+      background: var(--bg);
+      border: 1px solid #d8d1c5;
+      box-shadow: 0 24px 70px rgba(55, 49, 38, .14);
+    }
+
+    .app {
+      display: grid;
+      grid-template-columns: 236px 1fr;
+      height: 100%;
+    }
+
+    .sidebar {
+      padding: 18px 14px;
+      background: var(--rail);
+      border-right: 1px solid #ded8ce;
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 2px 8px 22px;
+      font-size: 15px;
+      font-weight: 760;
+    }
+
+    .mark {
+      display: grid;
+      place-items: center;
+      width: 28px;
+      height: 28px;
+      border-radius: 8px;
+      background: #232323;
+      color: white;
+      font-size: 14px;
+      font-weight: 800;
+    }
+
+    .nav-title {
+      margin: 22px 8px 8px;
+      color: #948b7c;
+      font-size: 11px;
+      font-weight: 760;
+      letter-spacing: .04em;
+      text-transform: uppercase;
+    }
+
+    .nav-item {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      height: 34px;
+      padding: 0 10px;
+      border-radius: 7px;
+      color: #4f4b45;
+      font-size: 13px;
+    }
+
+    .nav-item.active {
+      background: #fffefa;
+      color: #202020;
+      box-shadow: inset 0 0 0 1px rgba(0,0,0,.04);
+    }
+
+    .dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 99px;
+      background: #b6afa3;
+    }
+
+    .blue { background: var(--blue); }
+    .green { background: var(--green); }
+    .amber { background: var(--amber); }
+    .rose { background: var(--rose); }
+    .purple { background: var(--purple); }
+
+    .main {
+      min-width: 0;
+      background:
+        linear-gradient(rgba(28, 26, 23, .035) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(28, 26, 23, .035) 1px, transparent 1px),
+        var(--bg);
+      background-size: 28px 28px;
+    }
+
+    .plain { background: var(--bg); }
+
+    .topbar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      height: 64px;
+      padding: 0 28px;
+      background: rgba(247,245,240,.88);
+      border-bottom: 1px solid rgba(214,208,196,.7);
+      backdrop-filter: blur(16px);
+    }
+
+    .crumb {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      color: var(--muted);
+      font-size: 13px;
+    }
+
+    .title {
+      color: var(--ink);
+      font-size: 17px;
+      font-weight: 760;
+    }
+
+    .actions {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .chip,
+    .button {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      height: 34px;
+      padding: 0 12px;
+      border: 1px solid var(--line);
+      border-radius: 7px;
+      background: rgba(255,254,250,.78);
+      color: #3e3a35;
+      font-size: 12px;
+      font-weight: 650;
+    }
+
+    .button.primary {
+      border-color: #242424;
+      background: #242424;
+      color: white;
+    }
+
+    .workspace {
+      position: relative;
+      height: calc(100% - 64px);
+      padding: 28px;
+    }
+
+    .panel,
+    .drawer,
+    .card,
+    .editor,
+    .assistant {
+      border: 1px solid var(--soft);
+      border-radius: 8px;
+      background: rgba(255,254,250,.96);
+      box-shadow: 0 16px 42px rgba(51, 45, 35, .09);
+      overflow: hidden;
+    }
+
+    .panel-head {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      height: 44px;
+      padding: 0 14px;
+      border-bottom: 1px solid var(--soft);
+      font-size: 13px;
+      font-weight: 760;
+    }
+
+    .panel-body { padding: 14px; }
+
+    .muted {
+      color: var(--muted);
+      font-size: 12px;
+      line-height: 1.45;
+    }
+
+    .tag {
+      display: inline-flex;
+      align-items: center;
+      height: 22px;
+      padding: 0 7px;
+      border-radius: 6px;
+      background: #f0ece5;
+      color: #5d554b;
+      font-size: 10px;
+      font-weight: 760;
+    }
+
+    .status {
+      height: 22px;
+      padding: 3px 8px;
+      border-radius: 99px;
+      background: #edf8f2;
+      color: #247a59;
+      font-size: 11px;
+      font-weight: 760;
+    }
+
+    .provider-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 12px;
+    }
+
+    .provider {
+      display: grid;
+      gap: 10px;
+      min-height: 118px;
+      padding: 14px;
+      border: 1px solid var(--soft);
+      border-radius: 8px;
+      background: #fffefa;
+    }
+
+    .provider-title {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      font-size: 14px;
+      font-weight: 760;
+    }
+
+    .meter {
+      height: 6px;
+      border-radius: 99px;
+      background: #eee8de;
+      overflow: hidden;
+    }
+
+    .meter span {
+      display: block;
+      height: 100%;
+      border-radius: 99px;
+      background: #262626;
+    }
+
+    .mini-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      min-height: 22px;
+      color: #4f4a43;
+      font-size: 11px;
+    }
+
+    .drawer {
+      position: absolute;
+      top: 88px;
+      right: 28px;
+      width: 330px;
+    }
+
+    .field {
+      display: grid;
+      gap: 7px;
+      margin-bottom: 14px;
+    }
+
+    .label {
+      color: #82796c;
+      font-size: 11px;
+      font-weight: 760;
+      letter-spacing: .04em;
+      text-transform: uppercase;
+    }
+
+    .input {
+      min-height: 34px;
+      padding: 8px 10px;
+      border: 1px solid var(--soft);
+      border-radius: 7px;
+      background: var(--panel2);
+      color: #303030;
+      font-size: 12px;
+      line-height: 1.35;
+    }
+
+    .agent {
+      position: absolute;
+      width: 224px;
+    }
+
+    .agent-top {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 13px 14px 10px;
+      border-bottom: 1px solid #eee8df;
+    }
+
+    .agent-icon {
+      display: grid;
+      place-items: center;
+      width: 30px;
+      height: 30px;
+      border-radius: 8px;
+      background: #f0ece5;
+      color: #333;
+      font-size: 13px;
+      font-weight: 800;
+    }
+
+    .agent-name {
+      font-size: 13px;
+      font-weight: 780;
+    }
+
+    .agent-model {
+      margin-top: 2px;
+      color: #7e766a;
+      font-size: 11px;
+    }
+
+    .agent-body {
+      display: grid;
+      gap: 8px;
+      padding: 12px 14px 14px;
+    }
+
+    .connector {
+      position: absolute;
+      inset: 0;
+      pointer-events: none;
+    }
+
+    .timeline {
+      display: grid;
+      gap: 10px;
+    }
+
+    .event {
+      display: grid;
+      grid-template-columns: 24px 1fr auto;
+      gap: 10px;
+      padding: 12px;
+      border: 1px solid var(--soft);
+      border-radius: 8px;
+      background: #fffefa;
+    }
+
+    .bullet {
+      width: 22px;
+      height: 22px;
+      border-radius: 99px;
+      background: #f0ece5;
+    }
+
+    .event-title {
+      font-size: 12px;
+      font-weight: 760;
+    }
+
+    .event-sub {
+      margin-top: 4px;
+      color: var(--muted);
+      font-size: 11px;
+    }
+
+    .cost {
+      color: #81786a;
+      font-size: 11px;
+      font-variant-numeric: tabular-nums;
+    }
+
+    .preview {
+      position: absolute;
+      right: 36px;
+      bottom: 34px;
+      width: 312px;
+    }
+
+    .preview-ui {
+      height: 184px;
+      padding: 16px;
+      background: linear-gradient(180deg, #fbfaf7, #fffefa);
+    }
+
+    .hero-card {
+      height: 74px;
+      border-radius: 8px;
+      background: #1f2937;
+    }
+
+    .skeleton {
+      height: 8px;
+      margin-top: 12px;
+      border-radius: 99px;
+      background: #e8e1d7;
+    }
+
+    .short { width: 58%; }
+    .mid { width: 76%; }
+
+    .editor-main {
+      display: grid;
+      grid-template-columns: 1fr 380px;
+      gap: 18px;
+      height: 100%;
+    }
+
+    .editor {
+      display: grid;
+      grid-template-rows: 42px 1fr;
+    }
+
+    .tabs {
+      display: flex;
+      align-items: end;
+      gap: 4px;
+      padding: 0 10px;
+      border-bottom: 1px solid var(--soft);
+      background: #fbfaf7;
+    }
+
+    .tab {
+      height: 32px;
+      padding: 8px 12px;
+      border: 1px solid transparent;
+      border-bottom: 0;
+      border-radius: 7px 7px 0 0;
+      color: #6f675d;
+      font-size: 12px;
+    }
+
+    .tab.active {
+      background: #fffefa;
+      border-color: var(--soft);
+      color: #252525;
+      font-weight: 700;
+    }
+
+    pre {
+      margin: 0;
+      padding: 18px 22px;
+      color: #333;
+      font-family: "SFMono-Regular", Consolas, "Liberation Mono", monospace;
+      font-size: 13px;
+      line-height: 1.65;
+      white-space: pre-wrap;
+    }
+
+    .assistant {
+      display: grid;
+      grid-template-rows: 44px 1fr 76px;
+    }
+
+    .chat {
+      display: grid;
+      align-content: start;
+      gap: 12px;
+      padding: 14px;
+    }
+
+    .bubble {
+      padding: 11px 12px;
+      border-radius: 8px;
+      background: #f1ede6;
+      color: #383838;
+      font-size: 12px;
+      line-height: 1.45;
+    }
+
+    .bubble.agent-msg { background: #eef3ff; }
+
+    .composer {
+      padding: 12px;
+      border-top: 1px solid var(--soft);
+      background: #fbfaf7;
+    }
+
+    .composer-box {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      height: 44px;
+      padding: 0 10px;
+      border: 1px solid var(--soft);
+      border-radius: 8px;
+      background: #fffefa;
+      color: #8a8174;
+      font-size: 12px;
+    }
+
+    .scene-label {
+      position: absolute;
+      left: 264px;
+      bottom: 24px;
+      color: rgba(32,32,32,.36);
+      font-size: 12px;
+      font-weight: 700;
+    }
+  </style>
+</head>
+<body>
+  <section class="scene" id="scene-models">
+    <div class="app">
+      <aside class="sidebar">
+        <div class="brand"><div class="mark">A</div>Agent Canvas</div>
+        <div class="nav-title">Workspace</div>
+        <div class="nav-item active"><span class="dot blue"></span>Models</div>
+        <div class="nav-item"><span class="dot green"></span>Agents</div>
+        <div class="nav-item"><span class="dot amber"></span>Flows</div>
+        <div class="nav-title">Projects</div>
+        <div class="nav-item"><span class="dot"></span>UI Clone Lab</div>
+        <div class="nav-item"><span class="dot"></span>Web Research</div>
+      </aside>
+      <main class="main">
+        <div class="topbar">
+          <div class="crumb"><span>Workspace</span><span>/</span><span class="title">Model Providers</span></div>
+          <div class="actions"><div class="chip">Cost guard: $12/day</div><div class="button primary">Add Provider</div></div>
+        </div>
+        <div class="workspace">
+          <div class="panel" style="position:absolute; left:28px; top:28px; width:780px;">
+            <div class="panel-head"><span>Connected providers</span><span class="muted">Unified gateway</span></div>
+            <div class="panel-body">
+              <div class="provider-grid">
+                <div class="provider"><div class="provider-title">OpenAI <span class="status">Vision</span></div><div class="muted">Used for screenshot review and layout reasoning.</div><div class="meter"><span style="width:42%"></span></div><div class="mini-row"><span>Daily spend</span><span>$3.28</span></div></div>
+                <div class="provider"><div class="provider-title">Claude <span class="status">Fallback</span></div><div class="muted">Escalates only when visual confidence is low.</div><div class="meter"><span style="width:24%"></span></div><div class="mini-row"><span>Daily spend</span><span>$1.11</span></div></div>
+                <div class="provider"><div class="provider-title">DeepSeek <span class="status">Code</span></div><div class="muted">Primary text/code model for edits and refactors.</div><div class="meter"><span style="width:68%"></span></div><div class="mini-row"><span>Requests</span><span>1,284</span></div></div>
+                <div class="provider"><div class="provider-title">GLM <span class="status">Cheap</span></div><div class="muted">Routing for search summaries and routine planning.</div><div class="meter"><span style="width:57%"></span></div><div class="mini-row"><span>Latency</span><span>740ms</span></div></div>
+              </div>
+            </div>
+          </div>
+          <div class="drawer">
+            <div class="panel-head">Routing policy <span class="tag">Live</span></div>
+            <div class="panel-body">
+              <div class="field"><div class="label">Default</div><div class="input">Cheap text model</div></div>
+              <div class="field"><div class="label">Code edits</div><div class="input">DeepSeek -> OpenAI fallback</div></div>
+              <div class="field"><div class="label">Screenshots</div><div class="input">OpenAI vision only on demand</div></div>
+              <div class="field"><div class="label">Guardrail</div><div class="input">Ask before expensive retry</div></div>
+            </div>
+          </div>
+          <div class="scene-label">01 · Provider setup</div>
+        </div>
+      </main>
+    </div>
+  </section>
+
+  <section class="scene" id="scene-canvas">
+    <div class="app">
+      <aside class="sidebar">
+        <div class="brand"><div class="mark">A</div>Agent Canvas</div>
+        <div class="nav-title">Workspace</div>
+        <div class="nav-item"><span class="dot blue"></span>Models</div>
+        <div class="nav-item active"><span class="dot green"></span>Agents</div>
+        <div class="nav-item"><span class="dot amber"></span>Flows</div>
+        <div class="nav-title">Templates</div>
+        <div class="nav-item"><span class="dot"></span>UI Clone</div>
+        <div class="nav-item"><span class="dot"></span>Research + Code</div>
+      </aside>
+      <main class="main">
+        <div class="topbar">
+          <div class="crumb"><span>Flows</span><span>/</span><span class="title">UI Clone Team</span></div>
+          <div class="actions"><div class="chip">4 agents</div><div class="button">Test Run</div><div class="button primary">Publish</div></div>
+        </div>
+        <div class="workspace">
+          <svg class="connector" viewBox="0 0 1204 836">
+            <path d="M320 248 C430 248 430 126 550 126" fill="none" stroke="#b8afa1" stroke-width="2.4"/>
+            <path d="M320 278 C430 278 430 306 550 306" fill="none" stroke="#b8afa1" stroke-width="2.4"/>
+            <path d="M320 308 C430 308 430 486 550 486" fill="none" stroke="#b8afa1" stroke-width="2.4"/>
+            <path d="M774 126 C900 126 900 306 1016 306" fill="none" stroke="#b8afa1" stroke-width="2.4"/>
+            <path d="M774 306 C900 306 900 306 1016 306" fill="none" stroke="#b8afa1" stroke-width="2.4"/>
+            <path d="M774 486 C900 486 900 306 1016 306" fill="none" stroke="#b8afa1" stroke-width="2.4"/>
+          </svg>
+          <div class="card agent" style="left:64px; top:218px;"><div class="agent-top"><div class="agent-icon">C</div><div><div class="agent-name">Controller Agent</div><div class="agent-model">policy router</div></div></div><div class="agent-body"><div class="mini-row"><span>Decides model</span><span class="tag">route</span></div><div class="mini-row"><span>Cost budget</span><span>$12/day</span></div></div></div>
+          <div class="card agent" style="left:550px; top:82px;"><div class="agent-top"><div class="agent-icon">V</div><div><div class="agent-name">Vision Agent</div><div class="agent-model">OpenAI vision</div></div></div><div class="agent-body"><div class="mini-row"><span>Reads page</span><span class="tag">screenshot</span></div><div class="mini-row"><span>Use</span><span>on demand</span></div></div></div>
+          <div class="card agent" style="left:550px; top:262px;"><div class="agent-top"><div class="agent-icon">K</div><div><div class="agent-name">Code Agent</div><div class="agent-model">DeepSeek code</div></div></div><div class="agent-body"><div class="mini-row"><span>Edits files</span><span class="tag">repo</span></div><div class="mini-row"><span>Permission</span><span>write</span></div></div></div>
+          <div class="card agent" style="left:550px; top:442px;"><div class="agent-top"><div class="agent-icon">A</div><div><div class="agent-name">AST Agent</div><div class="agent-model">tools first</div></div></div><div class="agent-body"><div class="mini-row"><span>Parses source</span><span class="tag">tree</span></div><div class="mini-row"><span>Model calls</span><span>minimal</span></div></div></div>
+          <div class="card agent" style="left:1016px; top:262px;"><div class="agent-top"><div class="agent-icon">R</div><div><div class="agent-name">Reviewer</div><div class="agent-model">mixed models</div></div></div><div class="agent-body"><div class="mini-row"><span>Checks diff</span><span class="tag">qa</span></div><div class="mini-row"><span>Output</span><span>patch</span></div></div></div>
+          <div class="scene-label">02 · Visual agent builder</div>
+        </div>
+      </main>
+    </div>
+  </section>
+
+  <section class="scene" id="scene-run">
+    <div class="app">
+      <aside class="sidebar">
+        <div class="brand"><div class="mark">A</div>Agent Canvas</div>
+        <div class="nav-title">Workspace</div>
+        <div class="nav-item"><span class="dot blue"></span>Models</div>
+        <div class="nav-item"><span class="dot green"></span>Agents</div>
+        <div class="nav-item active"><span class="dot amber"></span>Runs</div>
+        <div class="nav-title">Recent</div>
+        <div class="nav-item"><span class="dot green"></span>Landing Clone</div>
+        <div class="nav-item"><span class="dot rose"></span>Dashboard Fix</div>
+      </aside>
+      <main class="main">
+        <div class="topbar">
+          <div class="crumb"><span>Runs</span><span>/</span><span class="title">Clone Notion-style Board</span></div>
+          <div class="actions"><div class="chip">Running · 03:18</div><div class="button">Pause</div><div class="button primary">Approve</div></div>
+        </div>
+        <div class="workspace">
+          <div class="panel" style="position:absolute; left:28px; top:28px; width:720px;">
+            <div class="panel-head">Execution trace <span class="muted">$0.42 spent</span></div>
+            <div class="panel-body">
+              <div class="timeline">
+                <div class="event"><div class="bullet"></div><div><div class="event-title">Controller Agent selected route</div><div class="event-sub">Cheap text model for planning, no vision call yet.</div></div><div class="cost">$0.01</div></div>
+                <div class="event"><div class="bullet"></div><div><div class="event-title">Vision Agent inspected browser</div><div class="event-sub">One cropped screenshot used to detect spacing and layout.</div></div><div class="cost">$0.21</div></div>
+                <div class="event"><div class="bullet"></div><div><div class="event-title">AST Agent mapped components</div><div class="event-sub">Detected page shell, sidebar, canvas, and editor pane.</div></div><div class="cost">$0.00</div></div>
+                <div class="event"><div class="bullet"></div><div><div class="event-title">Code Agent applied patch</div><div class="event-sub">Updated React components and style tokens.</div></div><div class="cost">$0.08</div></div>
+                <div class="event"><div class="bullet"></div><div><div class="event-title">Reviewer waiting for visual diff</div><div class="event-sub">One final screenshot comparison before approval.</div></div><div class="cost">pending</div></div>
+              </div>
+            </div>
+          </div>
+          <div class="drawer" style="width:374px;">
+            <div class="panel-head">Controller decision <span class="tag">trace</span></div>
+            <div class="panel-body">
+              <div class="field"><div class="label">Task</div><div class="input">Recreate a clean workspace page from browser reference.</div></div>
+              <div class="field"><div class="label">Model route</div><div class="input">Plan: GLM · Code: DeepSeek · Vision: OpenAI</div></div>
+              <div class="field"><div class="label">Reason</div><div class="input">Use vision only for screenshot interpretation and final QA.</div></div>
+            </div>
+          </div>
+          <div class="panel preview">
+            <div class="panel-head">Browser preview <span class="tag">Live</span></div>
+            <div class="preview-ui"><div class="hero-card"></div><div class="skeleton mid"></div><div class="skeleton"></div><div class="skeleton short"></div></div>
+          </div>
+          <div class="scene-label">03 · Runtime orchestration</div>
+        </div>
+      </main>
+    </div>
+  </section>
+
+  <section class="scene" id="scene-editor">
+    <div class="app">
+      <aside class="sidebar">
+        <div class="brand"><div class="mark">A</div>Agent Canvas</div>
+        <div class="nav-title">Project</div>
+        <div class="nav-item active"><span class="dot blue"></span>app/page.tsx</div>
+        <div class="nav-item"><span class="dot"></span>components</div>
+        <div class="nav-item"><span class="dot"></span>styles.css</div>
+        <div class="nav-title">Agents</div>
+        <div class="nav-item"><span class="dot green"></span>UI Clone Team</div>
+        <div class="nav-item"><span class="dot purple"></span>Code Review</div>
+      </aside>
+      <main class="main plain">
+        <div class="topbar">
+          <div class="crumb"><span>Editor</span><span>/</span><span class="title">Agent Canvas Extension</span></div>
+          <div class="actions"><div class="chip">UI Clone Team</div><div class="button primary">Run Agent</div></div>
+        </div>
+        <div class="workspace">
+          <div class="editor-main">
+            <div class="editor">
+              <div class="tabs"><div class="tab active">page.tsx</div><div class="tab">canvas.tsx</div><div class="tab">tokens.css</div></div>
+              <pre>export default function Workspace() {
+  return (
+    &lt;main className="workspace-shell"&gt;
+      &lt;Sidebar project="UI Clone Lab" /&gt;
+      &lt;section className="canvas-area"&gt;
+        &lt;Toolbar agent="UI Clone Team" /&gt;
+        &lt;AgentBoard mode="visual" /&gt;
+      &lt;/section&gt;
+    &lt;/main&gt;
+  );
+}
+
+const route = {
+  planning: "GLM",
+  code: "DeepSeek",
+  vision: "OpenAI",
+  review: "mixed"
+};</pre>
+            </div>
+            <div class="assistant">
+              <div class="panel-head">Agent Canvas <span class="tag">ACP</span></div>
+              <div class="chat">
+                <div class="bubble">Clone this browser page with the UI Clone Team.</div>
+                <div class="bubble agent-msg">I will inspect the page visually, map components, then apply code edits using the cheaper code route.</div>
+                <div class="bubble agent-msg">Vision call approved for screenshot crop only. Code Agent is editing now.</div>
+              </div>
+              <div class="composer"><div class="composer-box"><span>Ask Agent Canvas...</span><span class="tag">Send</span></div></div>
+            </div>
+          </div>
+          <div class="scene-label">04 · Editor integration</div>
+        </div>
+      </main>
+    </div>
+  </section>
+</body>
+</html>
