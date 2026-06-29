@@ -61,6 +61,13 @@ npm.cmd run agent -- --opencode-max-nodes 1 --opencode-timeout-ms 90000
 npm.cmd run agent -- --allow-opencode-edits
 ```
 
+允许 shell 或网络时必须单独显式开启：
+
+```powershell
+npm.cmd run agent -- --allow-opencode-shell
+npm.cmd run agent -- --allow-opencode-network
+```
+
 ## Fake 测试
 
 ```powershell
@@ -118,6 +125,14 @@ npm.cmd run opencode:models -- --search kimi --limit 5
 ```powershell
 $env:DEEPSEEK_API_KEY="sk-your-deepseek-key"
 npm.cmd run run:opencode -- --workflow examples/workflows/opencode-single.json --prompt "Reply with OK only." --timeout-ms 90000
+```
+
+OpenCode 安全参数：
+
+```powershell
+--allow-opencode-edits
+--allow-opencode-shell
+--allow-opencode-network
 ```
 
 说明：

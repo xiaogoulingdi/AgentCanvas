@@ -155,7 +155,39 @@ https://api.kimi.com/coding/v1/messages
 - 默认不允许 OpenCode 编辑。
 - 默认不执行 shell。
 - 只有显式 `--allow-opencode-edits` 才允许 edit/write/patch 工具。
+- 只有显式 `--allow-opencode-shell` 才允许 bash/shell 工具。
+- 只有显式 `--allow-opencode-network` 才让 webfetch 进入 ask 状态。
 - 超时或 provider 错误会进入 `workflow.failed` trace。
+
+OpenCode server 启动时会注入 Agent Canvas 控制的 build agent 权限策略：
+
+```text
+edit: deny | allow
+bash: deny | ask
+webfetch: deny | ask
+doom_loop: deny
+external_directory: deny
+```
+
+Prompt 级工具策略也会同步设置：
+
+```text
+bash=false
+shell=false
+write=false
+edit=false
+patch=false
+```
+
+当传入 `--allow-opencode-edits` 时，仅放开：
+
+```text
+write=true
+edit=true
+patch=true
+```
+
+shell 和 network 仍然需要单独显式开启。
 
 ## 下一步
 

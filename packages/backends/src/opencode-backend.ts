@@ -13,6 +13,8 @@ export type OpenCodeBackendOptions = {
   providerId?: string;
   modelId?: string;
   allowEdits?: boolean;
+  allowShell?: boolean;
+  allowNetwork?: boolean;
   baseUrl?: string;
   maxNodes?: number;
   promptTimeoutMs?: number;
@@ -46,7 +48,15 @@ export class OpenCodeBackendAdapter implements AgentBackend {
     const connectionFactory = this.options.connectionFactory ?? createOpenCodeConnection;
     const promptRunner = this.options.promptRunner ?? runOpenCodePrompt;
     const connection = await connectionFactory({
-      ...(this.options.baseUrl ? { baseUrl: this.options.baseUrl } : { hostname: "127.0.0.1", timeout: 10000 })
+      ...(this.options.baseUrl
+        ? { baseUrl: this.options.baseUrl }
+        : {
+            hostname: "127.0.0.1",
+            timeout: 10000,
+            allowEdits: this.options.allowEdits ?? false,
+            allowShell: this.options.allowShell ?? false,
+            allowNetwork: this.options.allowNetwork ?? false
+          })
     });
 
     try {
@@ -76,6 +86,7 @@ export class OpenCodeBackendAdapter implements AgentBackend {
           providerId,
           modelId,
           allowEdits: this.options.allowEdits ?? false,
+          allowShell: this.options.allowShell ?? false,
           ...(this.options.promptTimeoutMs ? { timeoutMs: this.options.promptTimeoutMs } : {})
         });
         const parsed = parseOpenCodeResult(result);

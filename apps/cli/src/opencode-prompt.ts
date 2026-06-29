@@ -7,10 +7,11 @@ const providerId = readArg("--provider-id");
 const modelId = readArg("--model-id");
 const timeoutMs = Number(readArg("--timeout-ms") ?? "60000");
 const allowEdits = process.argv.includes("--allow-opencode-edits");
+const allowShell = process.argv.includes("--allow-opencode-shell");
 
 if (!prompt) {
   console.error(
-    "Usage: npm.cmd run opencode:prompt -- --prompt <prompt> [--base-url <url>] [--provider-id <id> --model-id <id>] [--timeout-ms <ms>] [--allow-opencode-edits]"
+    "Usage: npm.cmd run opencode:prompt -- --prompt <prompt> [--base-url <url>] [--provider-id <id> --model-id <id>] [--timeout-ms <ms>] [--allow-opencode-edits] [--allow-opencode-shell]"
   );
   process.exit(1);
 }
@@ -25,6 +26,7 @@ try {
     directory: process.cwd(),
     prompt,
     allowEdits,
+    allowShell,
     timeoutMs,
     ...(providerId ? { providerId } : {}),
     ...(modelId ? { modelId } : {})

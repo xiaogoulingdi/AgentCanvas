@@ -1,11 +1,15 @@
 import type { OpencodeClient } from "@opencode-ai/sdk";
 import { createServer } from "node:net";
+import { createOpenCodePermissionPolicy } from "./permission-policy.ts";
 
 export type OpenCodeConnectionOptions = {
   baseUrl?: string;
   hostname?: string;
   port?: number;
   timeout?: number;
+  allowEdits?: boolean;
+  allowShell?: boolean;
+  allowNetwork?: boolean;
 };
 
 export type OpenCodeConnection = {
@@ -30,7 +34,18 @@ export async function createOpenCodeConnection(options: OpenCodeConnectionOption
   const opencode = await sdk.createOpencode({
     hostname: options.hostname ?? "127.0.0.1",
     port,
-    timeout: options.timeout ?? 5000
+    timeout: options.timeout ?? 5000,
+    config: {
+      agent: {
+        build: {
+          permission: createOpenCodePermissionPolicy({
+            allowEdits: options.allowEdits ?? false,
+            allowShell: options.allowShell ?? false,
+            allowNetwork: options.allowNetwork ?? false
+          })
+        }
+      }
+    }
   });
 
   return {

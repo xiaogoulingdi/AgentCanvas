@@ -17,10 +17,12 @@ const maxNodes = Number(readArg("--max-nodes") ?? "1");
 const timeoutMs = Number(readArg("--timeout-ms") ?? "60000");
 const json = process.argv.includes("--json");
 const allowEdits = process.argv.includes("--allow-opencode-edits");
+const allowShell = process.argv.includes("--allow-opencode-shell");
+const allowNetwork = process.argv.includes("--allow-opencode-network");
 
 if (!prompt) {
   console.error(
-    "Usage: npm.cmd run run:opencode -- --workflow <workflow.json> --prompt <prompt> [--provider-id <id>] [--model-id <id>] [--max-nodes <n>] [--timeout-ms <ms>] [--allow-opencode-edits] [--json]"
+    "Usage: npm.cmd run run:opencode -- --workflow <workflow.json> --prompt <prompt> [--provider-id <id>] [--model-id <id>] [--max-nodes <n>] [--timeout-ms <ms>] [--allow-opencode-edits] [--allow-opencode-shell] [--allow-opencode-network] [--json]"
   );
   process.exit(1);
 }
@@ -44,9 +46,11 @@ try {
     backend: new OpenCodeBackendAdapter({
       directory: process.cwd(),
       providerId,
-      modelId,
-      allowEdits,
-      maxNodes,
+    modelId,
+    allowEdits,
+    allowShell,
+    allowNetwork,
+    maxNodes,
       promptTimeoutMs: timeoutMs
     }),
     eventLog

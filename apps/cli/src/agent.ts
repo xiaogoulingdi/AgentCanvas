@@ -77,6 +77,8 @@ const workflows = [
 const workspaceTools = process.argv.includes("--workspace-tools");
 const allowFileEdits = process.argv.includes("--allow-file-edits");
 const allowOpenCodeEdits = process.argv.includes("--allow-opencode-edits");
+const allowOpenCodeShell = process.argv.includes("--allow-opencode-shell");
+const allowOpenCodeNetwork = process.argv.includes("--allow-opencode-network");
 const opencodeTimeoutMs = Number(readArg("--opencode-timeout-ms") ?? "90000");
 const opencodeMaxNodes = Number(readArg("--opencode-max-nodes") ?? "1");
 
@@ -182,6 +184,8 @@ async function createRunContext(
         providerId: selectedEngine.providerId,
         modelId: selectedEngine.modelId,
         allowEdits: allowOpenCodeEdits,
+        allowShell: allowOpenCodeShell,
+        allowNetwork: allowOpenCodeNetwork,
         maxNodes: opencodeMaxNodes,
         promptTimeoutMs: opencodeTimeoutMs
       }),

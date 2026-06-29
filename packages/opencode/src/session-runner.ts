@@ -1,4 +1,5 @@
 import type { OpencodeClient } from "@opencode-ai/sdk";
+import { createOpenCodeToolPolicy } from "./permission-policy.ts";
 
 export type OpenCodePromptInput = {
   client: OpencodeClient;
@@ -8,6 +9,7 @@ export type OpenCodePromptInput = {
   providerId?: string;
   modelId?: string;
   allowEdits?: boolean;
+  allowShell?: boolean;
   timeoutMs?: number;
 };
 
@@ -43,7 +45,7 @@ export async function runOpenCodePrompt(input: OpenCodePromptInput): Promise<Ope
       },
       body: {
         ...(input.providerId && input.modelId ? { model: { providerID: input.providerId, modelID: input.modelId } } : {}),
-        tools: defaultToolPolicy(input.allowEdits ?? false),
+        tools: createOpenCodeToolPolicy({ allowEdits: input.allowEdits ?? false, allowShell: input.allowShell ?? false }),
         parts: [
           {
             type: "text",
@@ -111,14 +113,4 @@ function assertNoSdkError(value: unknown, message: string, sessionId: string): v
   const ref = error.data?.ref ? ` ref=${error.data.ref}` : "";
   const status = error.data?.statusCode ? ` status=${error.data.statusCode}` : "";
   throw new Error(`${message}: ${detail}; session=${sessionId}${status}${ref}`);
-}
-
-function defaultToolPolicy(allowEdits: boolean): Record<string, boolean> {
-  return {
-    bash: false,
-    shell: false,
-    write: allowEdits,
-    edit: allowEdits,
-    patch: allowEdits
-  };
 }
