@@ -87,6 +87,36 @@ packages/backends/src/opencode-backend.ts
 
 现在 Agent Canvas 已经有自己的受控 CLI 文件编辑工具，可以先验证文件写入、权限和 artifact 保存链路。
 
+## OpenCode Prompt Probe
+
+命令：
+
+```powershell
+npm.cmd run opencode:prompt -- --prompt "Summarize this project in one sentence."
+```
+
+默认会禁用常见 shell/write/edit/patch 工具：
+
+```text
+bash=false
+shell=false
+write=false
+edit=false
+patch=false
+```
+
+只有显式传入下面参数才允许 OpenCode 编辑：
+
+```powershell
+npm.cmd run opencode:prompt -- --prompt "..." --allow-opencode-edits
+```
+
+可以指定 provider/model：
+
+```powershell
+npm.cmd run opencode:prompt -- --prompt "..." --provider-id anthropic --model-id claude-sonnet-4-20250514
+```
+
 ## 下一步
 
 1. 调用 OpenCode `session.create` 创建 session。

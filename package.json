@@ -11,6 +11,7 @@
     "agent": "node --experimental-strip-types apps/cli/src/agent.ts",
     "file:edit": "node --experimental-strip-types apps/cli/src/edit-file.ts",
     "opencode:health": "node --experimental-strip-types apps/cli/src/opencode-health.ts",
+    "opencode:prompt": "node --experimental-strip-types apps/cli/src/opencode-prompt.ts",
     "probe:deepseek": "node --experimental-strip-types apps/cli/src/probe-model.ts --provider deepseek",
     "probe:kimi": "node --experimental-strip-types apps/cli/src/probe-model.ts --provider kimi",
     "probe:custom": "node --experimental-strip-types apps/cli/src/probe-model.ts --provider custom"
