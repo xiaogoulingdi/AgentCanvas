@@ -79,6 +79,15 @@ function mapBackendEvent(sessionId: string, event: BackendEvent): AgentEvent[] {
           estimatedUsd: event.estimatedUsd
         })
       ];
+    case "permission.policy.loaded":
+      return [
+        base(sessionId, {
+          type: "permission.policy.loaded",
+          source: event.source,
+          defaultDecision: event.defaultDecision,
+          policy: event.policy
+        })
+      ];
     case "tool.call.requested":
       return [base(sessionId, { type: "tool.call.requested", nodeId: event.node.id, toolName: event.toolName })];
     case "permission.checked":
@@ -87,7 +96,9 @@ function mapBackendEvent(sessionId: string, event: BackendEvent): AgentEvent[] {
           type: "permission.checked",
           nodeId: event.node.id,
           scope: event.scope,
-          decision: event.decision
+          decision: event.decision,
+          ...(event.reason ? { reason: event.reason } : {}),
+          ...(event.source ? { source: event.source } : {})
         })
       ];
     case "tool.call.completed":

@@ -135,6 +135,35 @@ Deletions: 1
 
 当前实现会保留 report artifact；如果 OpenCode 返回 diff，会额外生成 patch artifact。
 
+Patch artifact 还会保留结构化 metadata：
+
+```json
+{
+  "source": "opencode",
+  "opencodeSessionId": "ses_xxx",
+  "diffs": [
+    {
+      "file": "path/to/file",
+      "before": "old content",
+      "after": "new content",
+      "additions": 1,
+      "deletions": 1
+    }
+  ]
+}
+```
+
+因此 CLI 可以安全地做 apply/reject/revert：
+
+```powershell
+npm.cmd run patch:list -- --latest
+npm.cmd run patch:apply -- --session-id <session-id> --artifact-id <artifact-id>
+npm.cmd run patch:apply -- --session-id <session-id> --artifact-id <artifact-id> --yes
+npm.cmd run patch:revert -- --session-id <session-id> --artifact-id <artifact-id> --yes
+```
+
+当前 patch apply 会先检查文件当前内容是否匹配 `before` 快照；不匹配时拒绝写入。
+
 ## Kimi 说明
 
 OpenCode 的 `kimi-for-coding` provider 使用 Kimi Coding API：
@@ -158,6 +187,7 @@ https://api.kimi.com/coding/v1/messages
 - 只有显式 `--allow-opencode-shell` 才允许 bash/shell 工具。
 - 只有显式 `--allow-opencode-network` 才让 webfetch 进入 ask 状态。
 - 超时或 provider 错误会进入 `workflow.failed` trace。
+- 权限策略和权限检查都会写入 event log，方便后续 Canvas trace panel 展示。
 
 OpenCode server 启动时会注入 Agent Canvas 控制的 build agent 权限策略：
 
@@ -189,9 +219,16 @@ patch=true
 
 shell 和 network 仍然需要单独显式开启。
 
+Trace 示例：
+
+```text
+[permission.policy.loaded] opencode-tool-policy default=deny scopes=5
+[permission.checked] coder filesystem.patch -> ask (Scope filesystem.patch matched configured static policy.)
+```
+
 ## 下一步
 
-1. 把 OpenCode permission request 接到 `PermissionBroker`。
+1. 把 OpenCode runtime permission request 进一步接成可交互 ask/approve 流程。
 2. 把 OpenCode diff artifact 接到未来 Canvas trace panel。
-3. 增加 OpenCode session resume / inspect 命令。
+3. 增加 OpenCode session resume / inspect 的更细 message/status 视图。
 4. 增加更细的 model cost projection。

@@ -1,19 +1,42 @@
 import type { PermissionScope } from "../../workflow/src/types.ts";
-import type { PermissionBroker, PermissionDecision, PermissionRequest } from "./types.ts";
+import type { PermissionBroker, PermissionDecision, PermissionDecisionRecord, PermissionRequest } from "./types.ts";
 
 export type StaticPermissionPolicy = Partial<Record<PermissionScope, PermissionDecision>>;
 
 export class StaticPermissionBroker implements PermissionBroker {
   private readonly policy: StaticPermissionPolicy;
   private readonly defaultDecision: PermissionDecision;
+  private readonly source: string;
 
   constructor(input: { policy?: StaticPermissionPolicy; defaultDecision?: PermissionDecision } = {}) {
     this.policy = input.policy ?? {};
     this.defaultDecision = input.defaultDecision ?? "deny";
+    this.source = "static-policy";
   }
 
   async check(request: PermissionRequest): Promise<PermissionDecision> {
     return this.policy[request.scope] ?? this.defaultDecision;
+  }
+
+  async explain(request: PermissionRequest): Promise<PermissionDecisionRecord> {
+    const configured = this.policy[request.scope];
+    const decision = configured ?? this.defaultDecision;
+    return {
+      scope: request.scope,
+      decision,
+      source: this.source,
+      reason: configured
+        ? `Scope ${request.scope} matched configured static policy.`
+        : `Scope ${request.scope} used default static decision ${this.defaultDecision}.`
+    };
+  }
+
+  describe(): { source: string; defaultDecision: PermissionDecision; policy: StaticPermissionPolicy } {
+    return {
+      source: this.source,
+      defaultDecision: this.defaultDecision,
+      policy: this.policy
+    };
   }
 }
 

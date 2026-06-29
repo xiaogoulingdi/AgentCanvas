@@ -70,6 +70,18 @@ describe("OpenCodeBackendAdapter", () => {
       events.push(event);
     }
 
+    expect(events).toContainEqual(
+      expect.objectContaining({
+        type: "permission.policy.loaded",
+        source: "opencode-tool-policy",
+        defaultDecision: "deny",
+        policy: expect.objectContaining({
+          edit: "deny",
+          bash: "deny"
+        })
+      })
+    );
+
     const artifacts = events.filter((event) => event.type === "artifact.created").map((event) => event.artifact);
     expect(artifacts).toHaveLength(2);
     expect(artifacts[0]).toMatchObject({
@@ -84,5 +96,10 @@ describe("OpenCodeBackendAdapter", () => {
     expect(artifacts[1]?.content).toContain("### README.md");
     expect(artifacts[1]?.content).toContain("-old");
     expect(artifacts[1]?.content).toContain("+new");
+    expect(artifacts[1]?.metadata).toMatchObject({
+      source: "opencode",
+      opencodeSessionId: "ses-test",
+      diffs: [{ file: "README.md", before: "old", after: "new" }]
+    });
   });
 });

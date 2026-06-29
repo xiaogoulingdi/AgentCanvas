@@ -76,6 +76,26 @@ npm.cmd run run:fake
 
 这个命令不需要 API key，适合验证 workflow、runtime、event log、trace renderer。
 
+运行结束后会打印 `Session`，并把事件写入本地：
+
+```text
+.agent-canvas/runs/
+```
+
+查看最近运行：
+
+```powershell
+npm.cmd run run:list -- --limit 5
+npm.cmd run run:inspect -- --latest --artifacts
+npm.cmd run run:inspect -- --session-id <session-id> --json
+```
+
+Trace 中会显示权限决策，例如：
+
+```text
+[permission.checked] coder filesystem.patch -> ask (Scope filesystem.patch matched configured static policy.)
+```
+
 ## DeepSeek + Kimi 路由测试
 
 ```powershell
@@ -163,12 +183,50 @@ npm.cmd run run:fake -- --workspace-tools --allow-file-edits
 
 当前 workflow 只写 `.agent-canvas/proposed-changes/` 下的 artifact，不直接修改源码。
 
+## Patch Artifact 测试
+
+OpenCode 返回结构化 diff 时，Agent Canvas 会生成 `patch` artifact。补丁不会自动应用，需要显式命令。
+
+列出最近运行的 patch：
+
+```powershell
+npm.cmd run patch:list -- --latest
+```
+
+Dry-run 应用：
+
+```powershell
+npm.cmd run patch:apply -- --session-id <session-id> --artifact-id <artifact-id>
+```
+
+真实应用：
+
+```powershell
+npm.cmd run patch:apply -- --session-id <session-id> --artifact-id <artifact-id> --yes
+```
+
+拒绝或回滚：
+
+```powershell
+npm.cmd run patch:reject -- --session-id <session-id> --artifact-id <artifact-id>
+npm.cmd run patch:revert -- --session-id <session-id> --artifact-id <artifact-id> --yes
+```
+
+安全规则：
+
+- 只有带结构化 `before/after` metadata 的 patch artifact 可以应用。
+- 默认 dry-run，不写文件。
+- 应用前会检查当前文件内容是否仍匹配 `before` 快照。
+- 已应用的 patch 必须先 revert，不能直接 reject。
+
 ## 每次开发后验证
 
 ```powershell
 npm.cmd run check
 npm.cmd test
 npm.cmd run run:fake
+npm.cmd run run:list -- --limit 3
+npm.cmd run run:inspect -- --latest --artifacts
 ```
 
 如果改了模型或 OpenCode 相关代码，再额外跑：

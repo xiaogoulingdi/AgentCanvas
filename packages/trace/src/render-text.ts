@@ -14,6 +14,12 @@ export function renderTraceText(events: AgentEvent[]): string {
         return `[${event.type}] ${event.nodeId} -> ${event.selectedModel} (${event.reason})`;
       case "model.request.completed":
         return `[${event.type}] ${event.nodeId} ${event.model}\n  ${formatSnippet(event.content)}`;
+      case "permission.policy.loaded":
+        return `[${event.type}] ${event.source} default=${event.defaultDecision} scopes=${Object.keys(event.policy).length}`;
+      case "permission.checked":
+        return `[${event.type}] ${event.nodeId} ${event.scope} -> ${event.decision}${event.reason ? ` (${event.reason})` : ""}`;
+      case "tool.call.requested":
+        return `[${event.type}] ${event.nodeId} ${event.toolName}`;
       case "tool.call.completed":
         return `[${event.type}] ${event.nodeId} ${event.toolName}: ${formatSnippet(event.summary, 180)}`;
       case "cost.updated":

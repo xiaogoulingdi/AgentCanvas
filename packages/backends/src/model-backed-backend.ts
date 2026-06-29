@@ -5,6 +5,7 @@ import type { PermissionBroker } from "../../permissions/src/types.ts";
 import { MockToolBroker } from "../../tools/src/mock-tool-broker.ts";
 import type { ToolBroker } from "../../tools/src/types.ts";
 import type { AgentBackend, BackendEvent, BackendRunRequest } from "./types.ts";
+import type { PlanNode } from "../../workflow/src/types.ts";
 
 export class ModelBackedBackendAdapter implements AgentBackend {
   private readonly router: ModelRouter;
@@ -67,8 +68,8 @@ export class ModelBackedBackendAdapter implements AgentBackend {
       };
 
       for (const scope of node.permissions ?? []) {
-        const decision = await this.permissionBroker.check({ sessionId: request.sessionId, node, scope });
-        yield { type: "permission.checked", node, scope, decision };
+        const permission = await explainPermission(this.permissionBroker, { sessionId: request.sessionId, node, scope });
+        yield permissionCheckedEvent({ node, scope, ...permission });
       }
 
       for (const toolName of node.tools ?? []) {
@@ -107,6 +108,31 @@ export class ModelBackedBackendAdapter implements AgentBackend {
       yield { type: "agent.completed", node, status: "completed" };
     }
   }
+}
+
+function permissionCheckedEvent(input: {
+  node: PlanNode;
+  scope: string;
+  decision: "allow" | "ask" | "deny";
+  reason?: string;
+  source?: string;
+}): BackendEvent {
+  return {
+    type: "permission.checked",
+    node: input.node,
+    scope: input.scope,
+    decision: input.decision,
+    ...(input.reason ? { reason: input.reason } : {}),
+    ...(input.source ? { source: input.source } : {})
+  };
+}
+
+async function explainPermission(
+  broker: PermissionBroker,
+  request: Parameters<PermissionBroker["check"]>[0]
+): Promise<{ decision: "allow" | "ask" | "deny"; reason?: string; source?: string }> {
+  if (broker.explain) return broker.explain(request);
+  return { decision: await broker.check(request) };
 }
 
 function systemPromptForNode(role: string): string {

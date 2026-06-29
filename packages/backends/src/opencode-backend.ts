@@ -7,6 +7,8 @@ import type { PermissionBroker } from "../../permissions/src/types.ts";
 import type { AgentBackend, BackendEvent, BackendRunRequest } from "./types.ts";
 import type { OpenCodeConnection } from "../../opencode/src/client.ts";
 import type { OpenCodePromptInput, OpenCodePromptResult } from "../../opencode/src/session-runner.ts";
+import { createOpenCodePermissionPolicy } from "../../opencode/src/permission-policy.ts";
+import type { PlanNode } from "../../workflow/src/types.ts";
 
 export type OpenCodeBackendOptions = {
   directory: string;
@@ -60,6 +62,18 @@ export class OpenCodeBackendAdapter implements AgentBackend {
     });
 
     try {
+      const opencodePolicy = createOpenCodePermissionPolicy({
+        allowEdits: this.options.allowEdits ?? false,
+        allowShell: this.options.allowShell ?? false,
+        allowNetwork: this.options.allowNetwork ?? false
+      });
+      yield {
+        type: "permission.policy.loaded",
+        source: "opencode-tool-policy",
+        defaultDecision: "deny",
+        policy: flattenOpenCodePolicy(opencodePolicy)
+      };
+
       for (const node of request.plan.nodes.slice(0, this.options.maxNodes ?? request.plan.nodes.length)) {
         yield { type: "agent.started", node };
 
@@ -74,8 +88,8 @@ export class OpenCodeBackendAdapter implements AgentBackend {
         };
 
         for (const scope of node.permissions ?? []) {
-          const decision = await this.permissionBroker.check({ sessionId: request.sessionId, node, scope });
-          yield { type: "permission.checked", node, scope, decision };
+          const permission = await explainPermission(this.permissionBroker, { sessionId: request.sessionId, node, scope });
+          yield permissionCheckedEvent({ node, scope, ...permission });
         }
 
         const result = await promptRunner({
@@ -136,6 +150,41 @@ export class OpenCodeBackendAdapter implements AgentBackend {
       connection.close();
     }
   }
+}
+
+function permissionCheckedEvent(input: {
+  node: PlanNode;
+  scope: string;
+  decision: "allow" | "ask" | "deny";
+  reason?: string;
+  source?: string;
+}): BackendEvent {
+  return {
+    type: "permission.checked",
+    node: input.node,
+    scope: input.scope,
+    decision: input.decision,
+    ...(input.reason ? { reason: input.reason } : {}),
+    ...(input.source ? { source: input.source } : {})
+  };
+}
+
+async function explainPermission(
+  broker: PermissionBroker,
+  request: Parameters<PermissionBroker["check"]>[0]
+): Promise<{ decision: "allow" | "ask" | "deny"; reason?: string; source?: string }> {
+  if (broker.explain) return broker.explain(request);
+  return { decision: await broker.check(request) };
+}
+
+function flattenOpenCodePolicy(policy: ReturnType<typeof createOpenCodePermissionPolicy>): Record<string, "allow" | "ask" | "deny"> {
+  return {
+    edit: policy.edit,
+    bash: typeof policy.bash === "string" ? policy.bash : "ask",
+    webfetch: policy.webfetch,
+    doom_loop: policy.doom_loop,
+    external_directory: policy.external_directory
+  };
 }
 
 function buildOpenCodeNodePrompt(prompt: string, role: string): string {
