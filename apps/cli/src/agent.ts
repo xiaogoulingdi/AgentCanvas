@@ -10,6 +10,7 @@ import { ModelRouter } from "../../../packages/models/src/model-router.ts";
 import { formatPreflightIssues, preflightEngineRoutes } from "../../../packages/models/src/preflight.ts";
 import { ModelBackedBackendAdapter } from "../../../packages/backends/src/model-backed-backend.ts";
 import { FakeBackendAdapter } from "../../../packages/backends/src/fake-backend.ts";
+import { OpenCodeBackendAdapter } from "../../../packages/backends/src/opencode-backend.ts";
 import { MemoryEventLog } from "../../../packages/events/src/memory-event-log.ts";
 import { projectArtifacts } from "../../../packages/events/src/projections.ts";
 import { runWorkflow } from "../../../packages/runtime/src/run-workflow.ts";
@@ -31,6 +32,14 @@ type EngineOption =
       mode: "model";
       path: string;
       requiredEnv: string[];
+    }
+  | {
+      label: string;
+      mode: "opencode";
+      id: string;
+      providerId: string;
+      modelId: string;
+      requiredEnv: string[];
     };
 
 const engines: EngineOption[] = [
@@ -51,11 +60,25 @@ const engines: EngineOption[] = [
     mode: "model",
     path: "examples/engines/sub2api-balanced.json",
     requiredEnv: ["AGENT_CANVAS_API_KEY", "AGENT_CANVAS_API_BASE_URL", "AGENT_CANVAS_MODEL", "AGENT_CANVAS_WIRE_API"]
+  },
+  {
+    label: "OpenCode + DeepSeek",
+    mode: "opencode",
+    id: "opencode-deepseek",
+    providerId: "deepseek",
+    modelId: "deepseek-v4-flash",
+    requiredEnv: ["DEEPSEEK_API_KEY"]
   }
 ];
-const workflows = [{ label: "Research + Code", path: "examples/workflows/research-code.json" }];
+const workflows = [
+  { label: "Research + Code", path: "examples/workflows/research-code.json" },
+  { label: "OpenCode Single Node", path: "examples/workflows/opencode-single.json" }
+];
 const workspaceTools = process.argv.includes("--workspace-tools");
 const allowFileEdits = process.argv.includes("--allow-file-edits");
+const allowOpenCodeEdits = process.argv.includes("--allow-opencode-edits");
+const opencodeTimeoutMs = Number(readArg("--opencode-timeout-ms") ?? "90000");
+const opencodeMaxNodes = Number(readArg("--opencode-max-nodes") ?? "1");
 
 const promptSession = createPromptSession();
 console.log("Agent Canvas CLI");
@@ -152,6 +175,24 @@ async function createRunContext(
     };
   }
 
+  if (selectedEngine.mode === "opencode") {
+    return {
+      backend: new OpenCodeBackendAdapter({
+        directory: process.cwd(),
+        providerId: selectedEngine.providerId,
+        modelId: selectedEngine.modelId,
+        allowEdits: allowOpenCodeEdits,
+        maxNodes: opencodeMaxNodes,
+        promptTimeoutMs: opencodeTimeoutMs
+      }),
+      engine: {
+        id: selectedEngine.id,
+        type: "workflow",
+        workflowPath
+      }
+    };
+  }
+
   const engineConfig = JSON.parse(await readFile(selectedEngine.path, "utf8")) as EngineRouteConfig;
   const preflight = preflightEngineRoutes(engineConfig);
   if (!preflight.ok) {
@@ -218,4 +259,9 @@ function createPromptSession(): { question(prompt: string): Promise<string>; clo
       // No-op for piped input.
     }
   };
+}
+
+function readArg(name: string): string | undefined {
+  const index = process.argv.indexOf(name);
+  return index >= 0 ? process.argv[index + 1] : undefined;
 }
