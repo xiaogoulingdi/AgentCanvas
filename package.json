@@ -9,6 +9,8 @@
     "run:fake": "node --experimental-strip-types apps/cli/src/run.ts examples/workflows/research-code.json --prompt \"Analyze this project and propose a safe next step\"",
     "run:model": "node --experimental-strip-types apps/cli/src/run-model.ts",
     "agent": "node --experimental-strip-types apps/cli/src/agent.ts",
+    "file:edit": "node --experimental-strip-types apps/cli/src/edit-file.ts",
+    "opencode:health": "node --experimental-strip-types apps/cli/src/opencode-health.ts",
     "probe:deepseek": "node --experimental-strip-types apps/cli/src/probe-model.ts --provider deepseek",
     "probe:kimi": "node --experimental-strip-types apps/cli/src/probe-model.ts --provider kimi",
     "probe:custom": "node --experimental-strip-types apps/cli/src/probe-model.ts --provider custom"
@@ -17,5 +19,8 @@
     "@types/node": "^24.0.0",
     "typescript": "^5.8.0",
     "vitest": "^3.2.0"
+  },
+  "dependencies": {
+    "@opencode-ai/sdk": "^1.17.11"
   }
 }

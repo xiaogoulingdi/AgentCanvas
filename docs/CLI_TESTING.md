@@ -176,7 +176,37 @@ npm.cmd run run:fake
 
 如果改了模型适配器，再额外跑对应 provider 的 probe。
 
-## 7. 为什么现在不先做桌面弹窗
+## 7. 文件编辑测试
+
+Dry-run：
+
+```powershell
+npm.cmd run file:edit -- --path .agent-canvas/test-dry-run.txt --content "hello"
+```
+
+真实写入：
+
+```powershell
+npm.cmd run file:edit -- --path .agent-canvas/test-write.txt --content "hello" --yes
+```
+
+Workflow 写 artifact：
+
+```powershell
+npm.cmd run run:fake -- --workspace-tools --allow-file-edits
+```
+
+注意：当前 workflow 只写 `.agent-canvas/proposed-changes/` 下的模型提案 artifact，不直接修改源代码。
+
+## 8. OpenCode SDK 测试
+
+```powershell
+npm.cmd run opencode:health
+```
+
+该命令用于确认 Agent Canvas 能启动或连接 OpenCode server，并读取当前 project/path/vcs。
+
+## 9. 为什么现在不先做桌面弹窗
 
 真正桌面窗口通常需要引入 Tauri、Electron 或类似运行壳。它会带来：
 

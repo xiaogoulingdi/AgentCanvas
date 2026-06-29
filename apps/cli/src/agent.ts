@@ -14,6 +14,8 @@ import { MemoryEventLog } from "../../../packages/events/src/memory-event-log.ts
 import { projectArtifacts } from "../../../packages/events/src/projections.ts";
 import { runWorkflow } from "../../../packages/runtime/src/run-workflow.ts";
 import { renderTraceText } from "../../../packages/trace/src/render-text.ts";
+import { createReadOnlyPermissionBroker, createWorkspaceWritePermissionBroker } from "../../../packages/permissions/src/static-permission-broker.ts";
+import { WorkspaceToolBroker } from "../../../packages/tools/src/workspace-tool-broker.ts";
 import type { ExecutionEngine } from "../../../packages/engines/src/types.ts";
 import type { AgentBackend } from "../../../packages/backends/src/types.ts";
 
@@ -52,12 +54,23 @@ const engines: EngineOption[] = [
   }
 ];
 const workflows = [{ label: "Research + Code", path: "examples/workflows/research-code.json" }];
+const workspaceTools = process.argv.includes("--workspace-tools");
+const allowFileEdits = process.argv.includes("--allow-file-edits");
 
 const promptSession = createPromptSession();
 console.log("Agent Canvas CLI");
 console.log("================");
 console.log("OpenCode-like terminal test mode.");
-console.log("Safety: Phase 1 does not edit files or run shell commands. Tools are mocked.\n");
+console.log(
+  workspaceTools
+    ? "Safety: shell execution is disabled. Workspace tools are bounded to this repository."
+    : "Safety: Phase 1 does not edit files or run shell commands. Tools are mocked."
+);
+console.log("");
+if (workspaceTools) {
+  console.log(`Workspace tools: enabled (${allowFileEdits ? "writes allowed for artifacts" : "dry run"}).`);
+  console.log("Shell execution is still disabled.\n");
+}
 
 const engineChoice = await choose("Engine", engines.map((engine) => engine.label));
 const workflowChoice = await choose("Workflow", workflows.map((workflow) => workflow.label));
@@ -130,7 +143,7 @@ async function createRunContext(
 ): Promise<{ backend: AgentBackend; engine: ExecutionEngine }> {
   if (selectedEngine.mode === "fake") {
     return {
-      backend: new FakeBackendAdapter(),
+      backend: new FakeBackendAdapter(createBrokerOptions()),
       engine: {
         id: selectedEngine.id,
         type: "workflow",
@@ -146,12 +159,20 @@ async function createRunContext(
   }
 
   return {
-    backend: new ModelBackedBackendAdapter(new ModelRouter(engineConfig)),
+    backend: new ModelBackedBackendAdapter(new ModelRouter(engineConfig), createBrokerOptions()),
     engine: {
       id: engineConfig.id,
       type: "workflow",
       workflowPath
     }
+  };
+}
+
+function createBrokerOptions() {
+  if (!workspaceTools) return {};
+  return {
+    toolBroker: new WorkspaceToolBroker({ workspaceRoot: process.cwd(), allowWrites: allowFileEdits }),
+    permissionBroker: allowFileEdits ? createWorkspaceWritePermissionBroker() : createReadOnlyPermissionBroker()
   };
 }
 

@@ -1,9 +1,15 @@
 import { createId } from "../../shared/src/ids.ts";
 import type { ModelRouter } from "../../models/src/model-router.ts";
+import { createReadOnlyPermissionBroker } from "../../permissions/src/static-permission-broker.ts";
+import type { PermissionBroker } from "../../permissions/src/types.ts";
+import { MockToolBroker } from "../../tools/src/mock-tool-broker.ts";
+import type { ToolBroker } from "../../tools/src/types.ts";
 import type { AgentBackend, BackendEvent, BackendRunRequest } from "./types.ts";
 
 export class ModelBackedBackendAdapter implements AgentBackend {
   private readonly router: ModelRouter;
+  private readonly permissionBroker: PermissionBroker;
+  private readonly toolBroker: ToolBroker;
 
   readonly id = "model-backed-backend";
   readonly capabilities = {
@@ -13,8 +19,10 @@ export class ModelBackedBackendAdapter implements AgentBackend {
     supportsArtifacts: true
   };
 
-  constructor(router: ModelRouter) {
+  constructor(router: ModelRouter, input: { permissionBroker?: PermissionBroker; toolBroker?: ToolBroker } = {}) {
     this.router = router;
+    this.permissionBroker = input.permissionBroker ?? createReadOnlyPermissionBroker();
+    this.toolBroker = input.toolBroker ?? new MockToolBroker();
   }
 
   async *run(request: BackendRunRequest): AsyncIterable<BackendEvent> {
@@ -59,17 +67,28 @@ export class ModelBackedBackendAdapter implements AgentBackend {
       };
 
       for (const scope of node.permissions ?? []) {
-        yield { type: "permission.checked", node, scope, decision: scope === "shell" ? "ask" : "allow" };
+        const decision = await this.permissionBroker.check({ sessionId: request.sessionId, node, scope });
+        yield { type: "permission.checked", node, scope, decision };
       }
 
       for (const toolName of node.tools ?? []) {
         yield { type: "tool.call.requested", node, toolName };
+        const result = await this.toolBroker.execute({
+          sessionId: request.sessionId,
+          node,
+          toolName,
+          prompt: request.prompt,
+          modelOutput: response.content
+        });
         yield {
           type: "tool.call.completed",
           node,
           toolName,
-          summary: `Tool '${toolName}' is mocked in model-backed mode. No files were changed.`
+          summary: result.summary
         };
+        for (const artifact of result.artifacts ?? []) {
+          yield { type: "artifact.created", node, artifact };
+        }
       }
 
       if (node.role.includes("coder")) {

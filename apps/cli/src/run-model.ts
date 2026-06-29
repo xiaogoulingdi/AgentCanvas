@@ -6,6 +6,8 @@ import type { EngineRouteConfig } from "../../../packages/models/src/model-route
 import { ModelRouter } from "../../../packages/models/src/model-router.ts";
 import { formatPreflightIssues, preflightEngineRoutes } from "../../../packages/models/src/preflight.ts";
 import { ModelBackedBackendAdapter } from "../../../packages/backends/src/model-backed-backend.ts";
+import { createReadOnlyPermissionBroker, createWorkspaceWritePermissionBroker } from "../../../packages/permissions/src/static-permission-broker.ts";
+import { WorkspaceToolBroker } from "../../../packages/tools/src/workspace-tool-broker.ts";
 import { MemoryEventLog } from "../../../packages/events/src/memory-event-log.ts";
 import { runWorkflow } from "../../../packages/runtime/src/run-workflow.ts";
 import { renderTraceText } from "../../../packages/trace/src/render-text.ts";
@@ -16,9 +18,13 @@ const workflowPath = readArg("--workflow") ?? "examples/workflows/research-code.
 const enginePath = readArg("--engine") ?? "examples/engines/deepseek-kimi-balanced.json";
 const prompt = readArg("--prompt");
 const json = process.argv.includes("--json");
+const workspaceTools = process.argv.includes("--workspace-tools");
+const allowFileEdits = process.argv.includes("--allow-file-edits");
 
 if (!prompt) {
-  console.error("Usage: npm.cmd run run:model -- --engine <engine.json> --workflow <workflow.json> --prompt <prompt> [--json]");
+  console.error(
+    "Usage: npm.cmd run run:model -- --engine <engine.json> --workflow <workflow.json> --prompt <prompt> [--json] [--workspace-tools] [--allow-file-edits]"
+  );
   process.exit(1);
 }
 
@@ -33,7 +39,14 @@ if (!preflight.ok) {
 
 const plan = compileWorkflow(workflow);
 const router = new ModelRouter(engineConfig);
-const backend = new ModelBackedBackendAdapter(router);
+const backend = new ModelBackedBackendAdapter(router, {
+  ...(workspaceTools
+    ? {
+        toolBroker: new WorkspaceToolBroker({ workspaceRoot: process.cwd(), allowWrites: allowFileEdits }),
+        permissionBroker: allowFileEdits ? createWorkspaceWritePermissionBroker() : createReadOnlyPermissionBroker()
+      }
+    : {})
+});
 const eventLog = new MemoryEventLog();
 const sessionId = createId("session");
 const engine: ExecutionEngine = {

@@ -93,6 +93,15 @@ packages/backends/src/
 
 `ModelBackedBackendAdapter` 用真实模型返回内容，但工具调用仍是 mock，不会改文件，也不会执行 shell。
 
+Backend 现在通过 broker 注入权限和工具能力：
+
+- `PermissionBroker`
+- `ToolBroker`
+- `MockToolBroker`
+- `WorkspaceToolBroker`
+
+`WorkspaceToolBroker` 只允许在当前 workspace 内运行受控文件工具。默认 dry-run，只有 CLI 显式传入 `--allow-file-edits` 时才写入本地 artifact。
+
 ### Model Routing
 
 位置：
@@ -189,6 +198,27 @@ npm.cmd run agent
 
 ```text
 docs/CLI_TESTING.md
+```
+
+### File edit command
+
+```powershell
+npm.cmd run file:edit -- --path .agent-canvas/test.txt --content "hello"
+npm.cmd run file:edit -- --path .agent-canvas/test.txt --content "hello" --yes
+```
+
+默认是 dry-run。只有加 `--yes` 才会写文件。
+
+### OpenCode SDK health
+
+```powershell
+npm.cmd run opencode:health
+```
+
+详见：
+
+```text
+docs/OPENCODE_INTEGRATION.md
 ```
 
 ## 安全边界
