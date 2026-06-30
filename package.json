@@ -17,6 +17,7 @@
     "patch:reject": "node --experimental-strip-types apps/cli/src/patch-reject.ts",
     "patch:revert": "node --experimental-strip-types apps/cli/src/patch-revert.ts",
     "agent": "node --experimental-strip-types apps/cli/src/agent.ts",
+    "group:compile": "node --experimental-strip-types apps/cli/src/group-compile.ts",
     "file:edit": "node --experimental-strip-types apps/cli/src/edit-file.ts",
     "opencode:health": "node --experimental-strip-types apps/cli/src/opencode-health.ts",
     "opencode:models": "node --experimental-strip-types apps/cli/src/opencode-models.ts",

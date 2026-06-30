@@ -125,3 +125,13 @@ Multi-Agent Group
 ```
 
 第一版先定义 schema 和校验器，不急着把它编译成 workflow。这样可以先把产品语义定稳。
+
+## CLI 编译
+
+当前已经支持把策略组静态编译为 workflow：
+
+```powershell
+npm.cmd run group:compile -- --group examples/groups/balanced-coding-group.json
+```
+
+这一步不会运行模型，也不会写文件；它只把产品层策略组转换为执行层 `WorkflowDefinition`，方便后续 UI 选择策略组并发起任务。
