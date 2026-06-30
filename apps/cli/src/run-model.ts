@@ -13,6 +13,7 @@ import { renderTraceText } from "../../../packages/trace/src/render-text.ts";
 import { renderTraceJson } from "../../../packages/trace/src/render-json.ts";
 import type { ExecutionEngine } from "../../../packages/engines/src/types.ts";
 import { createCliEventLog, printSessionFooter } from "./run-log.ts";
+import { engineRoutesFromConfig, loadCliConfig, readArg } from "./config.ts";
 
 const workflowPath = readArg("--workflow") ?? "examples/workflows/research-code.json";
 const enginePath = readArg("--engine") ?? "examples/engines/deepseek-kimi-balanced.json";
@@ -23,13 +24,14 @@ const allowFileEdits = process.argv.includes("--allow-file-edits");
 
 if (!prompt) {
   console.error(
-    "Usage: npm.cmd run run:model -- --engine <engine.json> --workflow <workflow.json> --prompt <prompt> [--json] [--workspace-tools] [--allow-file-edits]"
+    "Usage: npm.cmd run run:model -- --engine <engine.json> --workflow <workflow.json> --prompt <prompt> [--config <agentcanvas.config.json>] [--json] [--workspace-tools] [--allow-file-edits]"
   );
   process.exit(1);
 }
 
 const workflow = JSON.parse(await readFile(workflowPath, "utf8")) as WorkflowDefinition;
-const engineConfig = JSON.parse(await readFile(enginePath, "utf8")) as EngineRouteConfig;
+const cliConfig = await loadCliConfig();
+const engineConfig = cliConfig ? engineRoutesFromConfig(cliConfig) : (JSON.parse(await readFile(enginePath, "utf8")) as EngineRouteConfig);
 const preflight = preflightEngineRoutes(engineConfig);
 if (!preflight.ok) {
   console.error("Model route preflight failed:");
@@ -67,8 +69,3 @@ await runWorkflow({
 const events = await eventLog.list(sessionId);
 console.log(json ? renderTraceJson(events) : renderTraceText(events));
 if (!json) printSessionFooter(sessionId);
-
-function readArg(name: string): string | undefined {
-  const index = process.argv.indexOf(name);
-  return index >= 0 ? process.argv[index + 1] : undefined;
-}

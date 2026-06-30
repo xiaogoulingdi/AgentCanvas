@@ -51,6 +51,7 @@ schemas/agentcanvas.config.schema.json
   "$schema": "./schemas/agentcanvas.config.schema.json",
   "version": "0.1.0",
   "defaultEngine": "balanced-coding-group",
+  "opencodeDefault": "deepseek/deepseek-v4-flash",
   "providers": {
     "deepseek": {
       "type": "openai_compatible",
@@ -109,7 +110,7 @@ npm.cmd run agent -- --config agentcanvas.config.example.json
 
 ## 下一步
 
-1. `packages/config` 读取并校验 config。
-2. CLI 支持 `--config`。
-3. Canvas UI 从 config 生成 provider / model / tool / group 选择器。
-4. `agentcanvas.local.json` 支持覆盖本地路径、MCP 命令和默认模型。
+1. 让 model provider registry 从 config 动态注册 provider。
+2. Canvas UI 从 config 生成 provider / model / tool / group 选择器。
+3. `agentcanvas.local.json` 支持覆盖本地路径、MCP 命令和默认模型。
+4. 把 config diff 写进 trace，方便审计一次运行使用了哪份配置。

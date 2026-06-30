@@ -5,6 +5,7 @@ export type AgentCanvasConfig = {
   $schema?: string;
   version: string;
   defaultEngine?: string;
+  opencodeDefault?: string;
   providers: Record<string, ProviderConfig>;
   models?: Record<string, string>;
   mcpServers?: Record<string, McpServerConfig>;

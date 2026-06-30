@@ -2,6 +2,7 @@
   "$schema": "./schemas/agentcanvas.config.schema.json",
   "version": "0.1.0",
   "defaultEngine": "balanced-coding-group",
+  "opencodeDefault": "deepseek/deepseek-v4-flash",
   "providers": {
     "deepseek": {
       "type": "openai_compatible",
@@ -36,7 +37,7 @@
   "models": {
     "default": "deepseek/deepseek-v4-flash",
     "planning": "deepseek/deepseek-v4-flash",
-    "code": "opencode/deepseek-v4-flash",
+    "code": "deepseek/deepseek-v4-flash",
     "review": "kimi/kimi-k2.6"
   },
   "mcpServers": {

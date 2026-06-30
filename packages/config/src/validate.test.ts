@@ -5,6 +5,7 @@ import { validateAgentCanvasConfig } from "./validate.ts";
 const validConfig: AgentCanvasConfig = {
   version: "0.1.0",
   defaultEngine: "balanced-coding-group",
+  opencodeDefault: "deepseek/deepseek-v4-flash",
   providers: {
     deepseek: {
       type: "openai_compatible",
@@ -15,7 +16,7 @@ const validConfig: AgentCanvasConfig = {
   },
   models: {
     default: "deepseek/deepseek-v4-flash",
-    code: "opencode/deepseek-v4-flash"
+    code: "deepseek/deepseek-v4-flash"
   },
   tools: {
     "filesystem.read": "allow",
@@ -60,7 +61,7 @@ describe("Agent Canvas config", () => {
           reason: "Route 'default' selected by agentcanvas config."
         },
         code: {
-          provider: "opencode",
+          provider: "deepseek",
           model: "deepseek-v4-flash",
           reason: "Route 'code' selected by agentcanvas config."
         }

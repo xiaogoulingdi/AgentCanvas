@@ -19,6 +19,7 @@ import { WorkspaceToolBroker } from "../../../packages/tools/src/workspace-tool-
 import type { ExecutionEngine } from "../../../packages/engines/src/types.ts";
 import type { AgentBackend } from "../../../packages/backends/src/types.ts";
 import { createCliEventLog } from "./run-log.ts";
+import { engineRoutesFromConfig, loadCliConfig, opencodeModelFromConfig, readArg } from "./config.ts";
 
 type EngineOption =
   | {
@@ -81,6 +82,8 @@ const allowOpenCodeShell = process.argv.includes("--allow-opencode-shell");
 const allowOpenCodeNetwork = process.argv.includes("--allow-opencode-network");
 const opencodeTimeoutMs = Number(readArg("--opencode-timeout-ms") ?? "90000");
 const opencodeMaxNodes = Number(readArg("--opencode-max-nodes") ?? "1");
+const cliConfig = await loadCliConfig();
+const configuredOpenCodeModel = opencodeModelFromConfig(cliConfig);
 
 const promptSession = createPromptSession();
 console.log("Agent Canvas CLI");
@@ -95,6 +98,9 @@ console.log("");
 if (workspaceTools) {
   console.log(`Workspace tools: enabled (${allowFileEdits ? "writes allowed for artifacts" : "dry run"}).`);
   console.log("Shell execution is still disabled.\n");
+}
+if (cliConfig) {
+  console.log(`Config: loaded ${readArg("--config")}.`);
 }
 
 const engineChoice = await choose("Engine", engines.map((engine) => engine.label));
@@ -183,8 +189,8 @@ async function createRunContext(
     return {
       backend: new OpenCodeBackendAdapter({
         directory: process.cwd(),
-        providerId: selectedEngine.providerId,
-        modelId: selectedEngine.modelId,
+        providerId: configuredOpenCodeModel.providerId ?? selectedEngine.providerId,
+        modelId: configuredOpenCodeModel.modelId ?? selectedEngine.modelId,
         allowEdits: allowOpenCodeEdits,
         allowShell: allowOpenCodeShell,
         allowNetwork: allowOpenCodeNetwork,
@@ -200,15 +206,16 @@ async function createRunContext(
   }
 
   const engineConfig = JSON.parse(await readFile(selectedEngine.path, "utf8")) as EngineRouteConfig;
-  const preflight = preflightEngineRoutes(engineConfig);
+  const resolvedEngineConfig = cliConfig ? engineRoutesFromConfig(cliConfig) : engineConfig;
+  const preflight = preflightEngineRoutes(resolvedEngineConfig);
   if (!preflight.ok) {
     throw new Error(`Model route preflight failed:\n${formatPreflightIssues(preflight)}`);
   }
 
   return {
-    backend: new ModelBackedBackendAdapter(new ModelRouter(engineConfig), createBrokerOptions()),
+    backend: new ModelBackedBackendAdapter(new ModelRouter(resolvedEngineConfig), createBrokerOptions()),
     engine: {
-      id: engineConfig.id,
+      id: resolvedEngineConfig.id,
       type: "workflow",
       workflowPath
     }
@@ -265,9 +272,4 @@ function createPromptSession(): { question(prompt: string): Promise<string>; clo
       // No-op for piped input.
     }
   };
-}
-
-function readArg(name: string): string | undefined {
-  const index = process.argv.indexOf(name);
-  return index >= 0 ? process.argv[index + 1] : undefined;
 }

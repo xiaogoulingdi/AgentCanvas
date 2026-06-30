@@ -29,6 +29,15 @@ export function validateAgentCanvasConfig(config: AgentCanvasConfig): string[] {
     }
   }
 
+  if (config.opencodeDefault) {
+    const [provider, ...modelParts] = config.opencodeDefault.split("/");
+    if (!provider || modelParts.length === 0 || !modelParts.join("/")) {
+      errors.push("opencodeDefault must use provider/model format.");
+    } else if (!config.providers?.[provider]) {
+      errors.push(`opencodeDefault references unknown provider '${provider}'.`);
+    }
+  }
+
   for (const [serverId, server] of Object.entries(config.mcpServers ?? {})) {
     if (!server.command) errors.push(`MCP server '${serverId}' command is required.`);
   }

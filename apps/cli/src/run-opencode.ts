@@ -8,11 +8,14 @@ import { renderTraceText } from "../../../packages/trace/src/render-text.ts";
 import { renderTraceJson } from "../../../packages/trace/src/render-json.ts";
 import type { ExecutionEngine } from "../../../packages/engines/src/types.ts";
 import { createCliEventLog, printSessionFooter } from "./run-log.ts";
+import { loadCliConfig, opencodeModelFromConfig, readArg } from "./config.ts";
 
 const workflowPath = readArg("--workflow") ?? "examples/workflows/research-code.json";
 const prompt = readArg("--prompt");
-const providerId = readArg("--provider-id") ?? "deepseek";
-const modelId = readArg("--model-id") ?? "deepseek-v4-flash";
+const cliConfig = await loadCliConfig();
+const configModel = opencodeModelFromConfig(cliConfig);
+const providerId = readArg("--provider-id") ?? configModel.providerId ?? "deepseek";
+const modelId = readArg("--model-id") ?? configModel.modelId ?? "deepseek-v4-flash";
 const maxNodes = Number(readArg("--max-nodes") ?? "1");
 const timeoutMs = Number(readArg("--timeout-ms") ?? "60000");
 const json = process.argv.includes("--json");
@@ -22,7 +25,7 @@ const allowNetwork = process.argv.includes("--allow-opencode-network");
 
 if (!prompt) {
   console.error(
-    "Usage: npm.cmd run run:opencode -- --workflow <workflow.json> --prompt <prompt> [--provider-id <id>] [--model-id <id>] [--max-nodes <n>] [--timeout-ms <ms>] [--allow-opencode-edits] [--allow-opencode-shell] [--allow-opencode-network] [--json]"
+    "Usage: npm.cmd run run:opencode -- --workflow <workflow.json> --prompt <prompt> [--config <agentcanvas.config.json>] [--provider-id <id>] [--model-id <id>] [--max-nodes <n>] [--timeout-ms <ms>] [--allow-opencode-edits] [--allow-opencode-shell] [--allow-opencode-network] [--json]"
   );
   process.exit(1);
 }
@@ -63,8 +66,3 @@ try {
 const events = await eventLog.list(sessionId);
 console.log(json ? renderTraceJson(events) : renderTraceText(events));
 if (!json) printSessionFooter(sessionId);
-
-function readArg(name: string): string | undefined {
-  const index = process.argv.indexOf(name);
-  return index >= 0 ? process.argv[index + 1] : undefined;
-}

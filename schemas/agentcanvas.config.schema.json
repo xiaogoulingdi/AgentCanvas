@@ -15,6 +15,9 @@
     "defaultEngine": {
       "type": "string"
     },
+    "opencodeDefault": {
+      "type": "string"
+    },
     "providers": {
       "type": "object",
       "additionalProperties": {
