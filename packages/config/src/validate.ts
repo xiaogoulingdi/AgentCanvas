@@ -15,6 +15,9 @@ export function validateAgentCanvasConfig(config: AgentCanvasConfig): string[] {
     if (!provider.baseUrl) errors.push(`Provider '${providerId}' baseUrl is required.`);
     if (!provider.apiKeyEnv) errors.push(`Provider '${providerId}' apiKeyEnv is required.`);
     if (provider.wireApi && !wireApis.has(provider.wireApi)) errors.push(`Provider '${providerId}' has invalid wireApi '${provider.wireApi}'.`);
+    if ((provider.type === "openai_compatible" || provider.type === "openai_responses" || provider.type === "custom") && !provider.models?.default) {
+      errors.push(`Provider '${providerId}' models.default is required for model runtime.`);
+    }
     if (provider.apiKeyEnv && provider.apiKeyEnv.toLowerCase().includes("sk-")) {
       errors.push(`Provider '${providerId}' apiKeyEnv must name an environment variable, not contain a key.`);
     }

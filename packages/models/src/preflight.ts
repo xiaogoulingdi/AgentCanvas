@@ -1,4 +1,4 @@
-import { getProviderProfileForPreflight } from "./provider-profiles.ts";
+import { builtInProviderProfiles, getProviderProfileForPreflight } from "./provider-profiles.ts";
 import type { EngineRouteConfig, RouteTarget } from "./model-router.ts";
 import type { ProviderProfile } from "./types.ts";
 
@@ -69,8 +69,11 @@ export function preflightProvider(provider: ProviderProfile, route?: string): Pr
   return issues;
 }
 
-export function preflightEngineRoutes(config: EngineRouteConfig): ProviderPreflightResult {
-  const issues = Object.entries(config.routes).flatMap(([route, target]) => preflightTarget(route, target));
+export function preflightEngineRoutes(
+  config: EngineRouteConfig,
+  providerRegistry: Record<string, ProviderProfile> = builtInProviderProfiles
+): ProviderPreflightResult {
+  const issues = Object.entries(config.routes).flatMap(([route, target]) => preflightTarget(route, target, providerRegistry));
   return {
     ok: issues.every((issue) => issue.level !== "error"),
     issues
@@ -88,8 +91,8 @@ export function formatPreflightIssues(result: ProviderPreflightResult): string {
     .join("\n");
 }
 
-function preflightTarget(route: string, target: RouteTarget): ProviderPreflightIssue[] {
-  const baseProvider = getProviderProfileForPreflight(target.provider);
+function preflightTarget(route: string, target: RouteTarget, providerRegistry: Record<string, ProviderProfile>): ProviderPreflightIssue[] {
+  const baseProvider = getProviderProfileForPreflight(target.provider, providerRegistry);
   if (!baseProvider) {
     return [
       {
@@ -106,7 +109,7 @@ function preflightTarget(route: string, target: RouteTarget): ProviderPreflightI
     ...(target.model ? { defaultModel: target.model } : {})
   };
   const primaryIssues = preflightProvider(provider, route);
-  const fallbackIssues = (target.fallback ?? []).flatMap((fallback, index) => preflightTarget(`${route}.fallback.${index}`, fallback));
+  const fallbackIssues = (target.fallback ?? []).flatMap((fallback, index) => preflightTarget(`${route}.fallback.${index}`, fallback, providerRegistry));
   return [...primaryIssues, ...fallbackIssues];
 }
 

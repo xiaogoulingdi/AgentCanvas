@@ -13,7 +13,7 @@ import { renderTraceText } from "../../../packages/trace/src/render-text.ts";
 import { renderTraceJson } from "../../../packages/trace/src/render-json.ts";
 import type { ExecutionEngine } from "../../../packages/engines/src/types.ts";
 import { createCliEventLog, printSessionFooter } from "./run-log.ts";
-import { engineRoutesFromConfig, loadCliConfig, readArg } from "./config.ts";
+import { engineRoutesFromConfig, loadCliConfig, providerProfilesFromConfig, readArg } from "./config.ts";
 
 const workflowPath = readArg("--workflow") ?? "examples/workflows/research-code.json";
 const enginePath = readArg("--engine") ?? "examples/engines/deepseek-kimi-balanced.json";
@@ -32,7 +32,8 @@ if (!prompt) {
 const workflow = JSON.parse(await readFile(workflowPath, "utf8")) as WorkflowDefinition;
 const cliConfig = await loadCliConfig();
 const engineConfig = cliConfig ? engineRoutesFromConfig(cliConfig) : (JSON.parse(await readFile(enginePath, "utf8")) as EngineRouteConfig);
-const preflight = preflightEngineRoutes(engineConfig);
+const providerRegistry = providerProfilesFromConfig(cliConfig);
+const preflight = preflightEngineRoutes(engineConfig, providerRegistry);
 if (!preflight.ok) {
   console.error("Model route preflight failed:");
   console.error(formatPreflightIssues(preflight));
@@ -40,7 +41,7 @@ if (!preflight.ok) {
 }
 
 const plan = compileWorkflow(workflow);
-const router = new ModelRouter(engineConfig);
+const router = new ModelRouter(engineConfig, providerRegistry);
 const backend = new ModelBackedBackendAdapter(router, {
   ...(workspaceTools
     ? {

@@ -1,5 +1,6 @@
 import type { PermissionDecision } from "../../permissions/src/types.ts";
 import type { EngineRouteConfig, RouteTarget } from "../../models/src/model-router.ts";
+import type { ProviderProfile } from "../../models/src/types.ts";
 
 export type AgentCanvasConfig = {
   $schema?: string;
@@ -48,4 +49,28 @@ export function configToEngineRoutes(config: AgentCanvasConfig): EngineRouteConf
     name: config.defaultEngine ?? "Agent Canvas Config",
     routes
   };
+}
+
+export function configToProviderProfiles(config: AgentCanvasConfig): Record<string, ProviderProfile> {
+  return Object.fromEntries(
+    Object.entries(config.providers).flatMap(([providerId, provider]) => {
+      if (provider.type === "opencode" || provider.type === "anthropic_compatible") return [];
+      const model = provider.models?.default ?? "";
+      return [
+        [
+          providerId,
+          {
+            id: providerId,
+            protocol: provider.wireApi === "responses" || provider.type === "openai_responses" ? "openai_responses" : "openai_chat_completions",
+            baseUrl: provider.baseUrl,
+            apiKeyEnv: provider.apiKeyEnv,
+            authHeader: "authorization_bearer",
+            defaultModel: model,
+            ...(provider.requiresOpenAIAuth !== undefined ? { requiresOpenAIAuth: provider.requiresOpenAIAuth } : {}),
+            ...(provider.disableResponseStorage !== undefined ? { disableResponseStorage: provider.disableResponseStorage } : {})
+          } satisfies ProviderProfile
+        ]
+      ];
+    })
+  );
 }

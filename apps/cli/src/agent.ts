@@ -19,7 +19,7 @@ import { WorkspaceToolBroker } from "../../../packages/tools/src/workspace-tool-
 import type { ExecutionEngine } from "../../../packages/engines/src/types.ts";
 import type { AgentBackend } from "../../../packages/backends/src/types.ts";
 import { createCliEventLog } from "./run-log.ts";
-import { engineRoutesFromConfig, loadCliConfig, opencodeModelFromConfig, readArg } from "./config.ts";
+import { engineRoutesFromConfig, loadCliConfig, opencodeModelFromConfig, providerProfilesFromConfig, readArg } from "./config.ts";
 
 type EngineOption =
   | {
@@ -84,6 +84,7 @@ const opencodeTimeoutMs = Number(readArg("--opencode-timeout-ms") ?? "90000");
 const opencodeMaxNodes = Number(readArg("--opencode-max-nodes") ?? "1");
 const cliConfig = await loadCliConfig();
 const configuredOpenCodeModel = opencodeModelFromConfig(cliConfig);
+const providerRegistry = providerProfilesFromConfig(cliConfig);
 
 const promptSession = createPromptSession();
 console.log("Agent Canvas CLI");
@@ -207,13 +208,13 @@ async function createRunContext(
 
   const engineConfig = JSON.parse(await readFile(selectedEngine.path, "utf8")) as EngineRouteConfig;
   const resolvedEngineConfig = cliConfig ? engineRoutesFromConfig(cliConfig) : engineConfig;
-  const preflight = preflightEngineRoutes(resolvedEngineConfig);
+  const preflight = preflightEngineRoutes(resolvedEngineConfig, providerRegistry);
   if (!preflight.ok) {
     throw new Error(`Model route preflight failed:\n${formatPreflightIssues(preflight)}`);
   }
 
   return {
-    backend: new ModelBackedBackendAdapter(new ModelRouter(resolvedEngineConfig), createBrokerOptions()),
+    backend: new ModelBackedBackendAdapter(new ModelRouter(resolvedEngineConfig, providerRegistry), createBrokerOptions()),
     engine: {
       id: resolvedEngineConfig.id,
       type: "workflow",

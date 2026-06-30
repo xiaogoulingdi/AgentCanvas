@@ -1,6 +1,6 @@
 import { OpenAICompatibleAdapter } from "./openai-compatible-adapter.ts";
 import { OpenAIResponsesAdapter } from "./openai-responses-adapter.ts";
-import { getProviderProfile } from "./provider-profiles.ts";
+import { builtInProviderProfiles, getProviderProfileFromRegistry } from "./provider-profiles.ts";
 import type { ModelAdapter, ModelRequest, ProviderProfile } from "./types.ts";
 
 export type EngineRouteConfig = {
@@ -27,9 +27,11 @@ export type ResolvedModelRoute = {
 
 export class ModelRouter {
   private readonly config: EngineRouteConfig;
+  private readonly providerRegistry: Record<string, ProviderProfile>;
 
-  constructor(config: EngineRouteConfig) {
+  constructor(config: EngineRouteConfig, providerRegistry: Record<string, ProviderProfile> = builtInProviderProfiles) {
     this.config = config;
+    this.providerRegistry = providerRegistry;
   }
 
   resolve(route: string): ResolvedModelRoute {
@@ -38,7 +40,7 @@ export class ModelRouter {
       throw new Error(`No model route '${route}' and no default route configured in engine '${this.config.id}'.`);
     }
 
-    const provider = getProviderProfile(target.provider);
+    const provider = getProviderProfileFromRegistry(target.provider, this.providerRegistry);
     return {
       route,
       provider,

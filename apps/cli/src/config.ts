@@ -1,6 +1,7 @@
 import { loadAgentCanvasConfig } from "../../../packages/config/src/loader.ts";
-import { configToEngineRoutes, type AgentCanvasConfig } from "../../../packages/config/src/types.ts";
+import { configToEngineRoutes, configToProviderProfiles, type AgentCanvasConfig } from "../../../packages/config/src/types.ts";
 import type { EngineRouteConfig } from "../../../packages/models/src/model-router.ts";
+import type { ProviderProfile } from "../../../packages/models/src/types.ts";
 
 export async function loadCliConfig(): Promise<AgentCanvasConfig | undefined> {
   const configPath = readArg("--config");
@@ -9,6 +10,10 @@ export async function loadCliConfig(): Promise<AgentCanvasConfig | undefined> {
 
 export function engineRoutesFromConfig(config: AgentCanvasConfig): EngineRouteConfig {
   return configToEngineRoutes(config);
+}
+
+export function providerProfilesFromConfig(config: AgentCanvasConfig | undefined): Record<string, ProviderProfile> | undefined {
+  return config ? configToProviderProfiles(config) : undefined;
 }
 
 export function opencodeModelFromConfig(config: AgentCanvasConfig | undefined): { providerId?: string; modelId?: string } {

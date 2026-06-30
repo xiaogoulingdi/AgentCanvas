@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { configToEngineRoutes, type AgentCanvasConfig } from "./types.ts";
+import { configToEngineRoutes, configToProviderProfiles, type AgentCanvasConfig } from "./types.ts";
 import { validateAgentCanvasConfig } from "./validate.ts";
 
 const validConfig: AgentCanvasConfig = {
@@ -11,7 +11,10 @@ const validConfig: AgentCanvasConfig = {
       type: "openai_compatible",
       baseUrl: "https://api.deepseek.com",
       apiKeyEnv: "DEEPSEEK_API_KEY",
-      wireApi: "chat_completions"
+      wireApi: "chat_completions",
+      models: {
+        default: "deepseek-v4-flash"
+      }
     }
   },
   models: {
@@ -44,10 +47,13 @@ describe("Agent Canvas config", () => {
           default: "missing/model"
         }
       })
-    ).toEqual([
-      "Provider 'deepseek' apiKeyEnv must name an environment variable, not contain a key.",
-      "Model route 'default' references unknown provider 'missing'."
-    ]);
+    ).toEqual(
+      expect.arrayContaining([
+        "Provider 'deepseek' apiKeyEnv must name an environment variable, not contain a key.",
+        "Provider 'deepseek' models.default is required for model runtime.",
+        "Model route 'default' references unknown provider 'missing'."
+      ])
+    );
   });
 
   it("projects model routes for existing CLI runtime", () => {
@@ -66,6 +72,16 @@ describe("Agent Canvas config", () => {
           reason: "Route 'code' selected by agentcanvas config."
         }
       }
+    });
+  });
+
+  it("projects provider profiles for model runtime", () => {
+    expect(configToProviderProfiles(validConfig).deepseek).toMatchObject({
+      id: "deepseek",
+      protocol: "openai_chat_completions",
+      baseUrl: "https://api.deepseek.com",
+      apiKeyEnv: "DEEPSEEK_API_KEY",
+      defaultModel: "deepseek-v4-flash"
     });
   });
 });

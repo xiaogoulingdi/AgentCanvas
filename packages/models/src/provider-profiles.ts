@@ -23,9 +23,13 @@ export const builtInProviderProfiles: Record<string, ProviderProfile> = {
 };
 
 export function getProviderProfile(providerId: string): ProviderProfile {
-  const provider = getProviderProfileForPreflight(providerId);
+  return getProviderProfileFromRegistry(providerId, builtInProviderProfiles);
+}
+
+export function getProviderProfileFromRegistry(providerId: string, registry: Record<string, ProviderProfile>): ProviderProfile {
+  const provider = getProviderProfileForPreflight(providerId, registry);
   if (!provider) {
-    throw new Error(`Unknown provider '${providerId}'. Available providers: ${Object.keys(builtInProviderProfiles).join(", ")}`);
+    throw new Error(`Unknown provider '${providerId}'. Available providers: ${Object.keys(registry).join(", ")}`);
   }
   if (!provider.baseUrl) {
     throw new Error(`Provider '${providerId}' is missing baseUrl.`);
@@ -36,8 +40,8 @@ export function getProviderProfile(providerId: string): ProviderProfile {
   return provider;
 }
 
-export function getProviderProfileForPreflight(providerId: string): ProviderProfile | undefined {
-  return builtInProviderProfiles[providerId];
+export function getProviderProfileForPreflight(providerId: string, registry: Record<string, ProviderProfile> = builtInProviderProfiles): ProviderProfile | undefined {
+  return registry[providerId];
 }
 
 function customProfile(): ProviderProfile {
