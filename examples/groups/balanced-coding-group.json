@@ -1,0 +1,101 @@
+{
+  "id": "balanced-coding-group",
+  "name": "Balanced Coding Group",
+  "version": "0.1.0",
+  "description": "A user-configured Multi-Agent Group for bounded coding tasks.",
+  "entryStrategy": "supervisor",
+  "limits": {
+    "maxDepth": 2,
+    "maxStrategyCalls": 6,
+    "maxSteps": 12,
+    "maxDiscussionRounds": 2,
+    "maxEstimatedUsd": 1,
+    "maxRuntimeSeconds": 600
+  },
+  "strategies": {
+    "supervisor": {
+      "role": "supervisor",
+      "intent": "Understand the user task, decide which user-configured sub-strategies to call, and stop when the plan is complete.",
+      "model": {
+        "provider": "deepseek",
+        "model": "deepseek-v4-flash",
+        "reason": "The user selected a balanced planning model for normal coding tasks.",
+        "fallback": [
+          {
+            "provider": "sub2api",
+            "model": "gpt-5.4-mini",
+            "reason": "User-configured fallback when DeepSeek is unavailable."
+          }
+        ]
+      },
+      "tools": ["project_search", "read_file"],
+      "permissions": ["filesystem.read", "model.cost"],
+      "canCall": [
+        {
+          "strategy": "researcher",
+          "when": "The task requires repository context or architecture understanding.",
+          "maxCalls": 2
+        },
+        {
+          "strategy": "coder",
+          "when": "The task requires a bounded file edit.",
+          "maxCalls": 2
+        },
+        {
+          "strategy": "reviewer",
+          "when": "A code change or risky plan needs independent review.",
+          "maxCalls": 2
+        }
+      ],
+      "budget": {
+        "maxEstimatedUsd": 0.2,
+        "maxRuntimeSeconds": 180
+      }
+    },
+    "researcher": {
+      "role": "researcher",
+      "intent": "Read repository context and summarize relevant constraints.",
+      "model": {
+        "provider": "deepseek",
+        "model": "deepseek-v4-flash",
+        "reason": "The user selected an inexpensive context-heavy model for research."
+      },
+      "tools": ["project_search", "read_file"],
+      "permissions": ["filesystem.read", "model.cost"],
+      "budget": {
+        "maxEstimatedUsd": 0.15,
+        "maxRuntimeSeconds": 180
+      }
+    },
+    "coder": {
+      "role": "coder",
+      "intent": "Use OpenCode to make bounded edits and emit patch artifacts.",
+      "model": {
+        "provider": "opencode",
+        "model": "deepseek-v4-flash",
+        "reason": "The user selected OpenCode as the coding backend."
+      },
+      "tools": ["read_file", "propose_patch"],
+      "permissions": ["filesystem.read", "filesystem.patch", "model.cost"],
+      "budget": {
+        "maxEstimatedUsd": 0.5,
+        "maxRuntimeSeconds": 300
+      }
+    },
+    "reviewer": {
+      "role": "reviewer",
+      "intent": "Review the proposed change, risks, and verification result.",
+      "model": {
+        "provider": "kimi",
+        "model": "kimi-k2.6",
+        "reason": "The user selected an independent review model for quality-sensitive checks."
+      },
+      "tools": ["diff", "fake_test"],
+      "permissions": ["filesystem.read", "model.cost"],
+      "budget": {
+        "maxEstimatedUsd": 0.25,
+        "maxRuntimeSeconds": 180
+      }
+    }
+  }
+}
