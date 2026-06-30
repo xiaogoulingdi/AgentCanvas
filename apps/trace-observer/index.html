@@ -3,22 +3,32 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>Agent Canvas Trace Observer</title>
+    <title>Agent Canvas Workbench</title>
     <style>
       :root {
-        --bg: #f6f7f9;
-        --surface: #ffffff;
-        --surface-muted: #eef1f4;
-        --border: #d8dde3;
-        --text: #17202a;
-        --muted: #647181;
-        --accent: #176b87;
-        --accent-soft: #d9eef4;
-        --success: #277c52;
-        --warning: #a86409;
+        --bg: #f4f0e7;
+        --grid: #e5dece;
+        --chrome: #ece8df;
+        --surface: #fffdfa;
+        --surface-muted: #f7f3ea;
+        --surface-strong: #ffffff;
+        --border: #ded6c8;
+        --border-strong: #c9bdab;
+        --text: #171717;
+        --muted: #706b63;
+        --soft: #8f887d;
+        --accent: #111111;
+        --accent-soft: #eee8dc;
+        --link: #5d55d9;
+        --success: #008f70;
+        --warning: #b66a00;
         --danger: #b42318;
-        --code: #111827;
+        --info: #286b87;
+        --code: #181715;
+        --code-soft: #f1ede4;
         --radius: 8px;
+        --radius-small: 6px;
+        --shadow-soft: 0 12px 32px rgb(41 35 25 / 8%);
       }
 
       * { box-sizing: border-box; }
@@ -29,107 +39,503 @@
         background: var(--bg);
         color: var(--text);
         font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+        font-size: 15px;
       }
 
-      button, textarea, select { font: inherit; }
-
-      .app {
-        display: grid;
-        grid-template-columns: minmax(240px, 300px) minmax(380px, 1fr) minmax(300px, 420px);
-        min-height: 100vh;
+      button, textarea, select, input {
+        font: inherit;
       }
 
-      .panel {
-        min-width: 0;
-        padding: 16px;
-        border-right: 1px solid var(--border);
-      }
-
-      .panel:last-child { border-right: 0; }
-
-      .title {
-        margin: 0 0 12px;
-        font-size: 18px;
-        line-height: 1.25;
-      }
-
-      .subtle {
-        color: var(--muted);
-        font-size: 12px;
-      }
-
-      textarea {
-        width: 100%;
-        min-height: 180px;
-        resize: vertical;
-        padding: 10px;
+      button, select, input, textarea {
         border: 1px solid var(--border);
-        border-radius: var(--radius);
-        background: var(--surface);
-        color: var(--code);
-        font-family: "SFMono-Regular", Consolas, "Liberation Mono", monospace;
-        font-size: 12px;
-        line-height: 1.45;
-      }
-
-      .toolbar {
-        display: flex;
-        gap: 8px;
-        align-items: center;
-        margin: 10px 0 14px;
-      }
-
-      .stack {
-        display: grid;
-        gap: 8px;
-      }
-
-      button, select {
-        min-height: 34px;
-        border: 1px solid var(--border);
-        border-radius: var(--radius);
-        background: var(--surface);
+        border-radius: var(--radius-small);
+        background: var(--surface-strong);
         color: var(--text);
       }
 
       button {
+        min-height: 34px;
         padding: 0 12px;
         cursor: pointer;
+      }
+
+      button:hover, select:hover, input:hover, textarea:hover {
+        border-color: var(--border-strong);
+      }
+
+      button:focus-visible, select:focus-visible, input:focus-visible, textarea:focus-visible {
+        outline: 2px solid #cbbcff;
+        outline-offset: 2px;
       }
 
       button.primary {
         border-color: var(--accent);
         background: var(--accent);
-        color: white;
+        color: #ffffff;
+        font-weight: 700;
       }
 
-      select {
+      button.primary:disabled {
+        cursor: wait;
+        opacity: 0.65;
+      }
+
+      button.ghost {
+        background: transparent;
+      }
+
+      input, select {
+        min-height: 34px;
         width: 100%;
         padding: 0 10px;
       }
 
-      .metric {
+      textarea {
+        width: 100%;
+        resize: vertical;
+        min-height: 156px;
+        padding: 12px;
+        line-height: 1.5;
+      }
+
+      code, pre {
+        font-family: "SFMono-Regular", Consolas, "Liberation Mono", monospace;
+      }
+
+      .app {
         display: grid;
-        grid-template-columns: 1fr auto;
-        gap: 12px;
-        padding: 10px 0;
+        grid-template-columns: 258px minmax(620px, 1fr) 356px;
+        min-height: 100vh;
+      }
+
+      .sidebar {
+        display: flex;
+        flex-direction: column;
+        min-width: 0;
+        padding: 16px 12px;
+        border-right: 1px solid var(--border);
+        background: var(--chrome);
+      }
+
+      .brand {
+        display: flex;
+        gap: 10px;
+        align-items: center;
+        margin: 2px 4px 18px;
+        font-weight: 800;
+      }
+
+      .brand-mark {
+        display: grid;
+        width: 30px;
+        height: 30px;
+        place-items: center;
+        border-radius: var(--radius-small);
+        background: var(--accent);
+        color: #ffffff;
+        font-weight: 800;
+      }
+
+      .nav {
+        display: grid;
+        gap: 4px;
+        margin-bottom: 26px;
+      }
+
+      .nav-item {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        min-height: 34px;
+        padding: 0 8px;
+        border-radius: var(--radius-small);
+        color: var(--text);
+      }
+
+      .nav-item.active {
+        background: var(--surface-strong);
+        font-weight: 700;
+      }
+
+      .sidebar-label {
+        margin: 0 8px 10px;
+        color: var(--muted);
+        font-size: 12px;
+        font-weight: 800;
+        letter-spacing: 0;
+        text-transform: uppercase;
+      }
+
+      .run-list {
+        display: grid;
+        gap: 5px;
+        min-height: 0;
+        overflow: auto;
+      }
+
+      .run-item {
+        display: grid;
+        width: 100%;
+        min-height: 48px;
+        padding: 7px 8px;
+        border: 0;
+        background: transparent;
+        text-align: left;
+      }
+
+      .run-item.active {
+        background: #ddd8ce;
+        font-weight: 700;
+      }
+
+      .run-item .meta {
+        color: var(--muted);
+        font-size: 12px;
+        font-weight: 500;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+      }
+
+      .sidebar-footer {
+        margin-top: auto;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 10px;
+        padding: 10px 4px 0;
+        color: var(--muted);
+        font-size: 12px;
+      }
+
+      .workspace {
+        min-width: 0;
+        background: var(--surface);
+      }
+
+      .topbar {
+        display: flex;
+        min-height: 58px;
+        align-items: center;
+        justify-content: space-between;
+        gap: 16px;
+        padding: 0 18px;
         border-bottom: 1px solid var(--border);
+      }
+
+      .title-block {
+        min-width: 0;
+      }
+
+      .title {
+        margin: 0;
+        font-size: 22px;
+        line-height: 1.2;
+      }
+
+      .subtitle {
+        margin-top: 4px;
+        color: var(--muted);
+        font-size: 13px;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+      }
+
+      .top-actions {
+        display: flex;
+        flex: 0 0 auto;
+        align-items: center;
+        gap: 8px;
+      }
+
+      .tabs {
+        display: flex;
+        gap: 2px;
+        padding: 3px;
+        border: 1px solid var(--border);
+        border-radius: var(--radius);
+        background: var(--surface-muted);
+      }
+
+      .tab {
+        min-height: 30px;
+        border: 0;
+        background: transparent;
+      }
+
+      .tab.active {
+        background: var(--surface-strong);
+        box-shadow: var(--shadow-soft);
+      }
+
+      .content {
+        display: grid;
+        grid-template-columns: 370px minmax(420px, 1fr);
+        gap: 18px;
+        padding: 18px;
+      }
+
+      .panel {
+        min-width: 0;
+        border: 1px solid var(--border);
+        border-radius: var(--radius);
+        background: var(--surface-strong);
+      }
+
+      .panel-head {
+        display: flex;
+        min-height: 46px;
+        align-items: center;
+        justify-content: space-between;
+        gap: 10px;
+        padding: 0 14px;
+        border-bottom: 1px solid var(--border);
+      }
+
+      .panel-title {
+        font-weight: 800;
+      }
+
+      .panel-body {
+        padding: 14px;
+      }
+
+      .stack {
+        display: grid;
+        gap: 10px;
+      }
+
+      .field {
+        display: grid;
+        gap: 6px;
+      }
+
+      .field label, .check-row label {
+        color: var(--muted);
+        font-size: 12px;
+        font-weight: 750;
+      }
+
+      .field-row {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 10px;
+      }
+
+      .check-grid {
+        display: grid;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: 8px;
+      }
+
+      .check-row {
+        display: flex;
+        align-items: center;
+        gap: 7px;
+        min-height: 34px;
+        padding: 0 9px;
+        border: 1px solid var(--border);
+        border-radius: var(--radius-small);
+        background: var(--surface-muted);
+      }
+
+      .check-row input {
+        width: 14px;
+        min-height: 14px;
+        padding: 0;
+      }
+
+      .hint {
+        color: var(--soft);
+        font-size: 12px;
+        line-height: 1.45;
+      }
+
+      .error {
+        display: none;
+        padding: 10px;
+        border: 1px solid #e9b1aa;
+        border-radius: var(--radius-small);
+        background: #fff0ee;
+        color: var(--danger);
         font-size: 13px;
       }
 
-      .metric strong { font-weight: 650; }
+      .status-strip {
+        display: grid;
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+        gap: 8px;
+        margin-top: 12px;
+      }
+
+      .metric {
+        min-width: 0;
+        padding: 9px;
+        border: 1px solid var(--border);
+        border-radius: var(--radius-small);
+        background: var(--surface-muted);
+      }
+
+      .metric span {
+        display: block;
+        color: var(--muted);
+        font-size: 11px;
+        font-weight: 750;
+      }
+
+      .metric strong {
+        display: block;
+        margin-top: 4px;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+      }
+
+      .view {
+        display: none;
+      }
+
+      .view.active {
+        display: block;
+      }
+
+      .canvas {
+        position: relative;
+        min-height: 610px;
+        overflow: auto;
+        border-radius: 0 0 var(--radius) var(--radius);
+        background-color: var(--surface);
+        background-image: radial-gradient(var(--grid) 1px, transparent 1px);
+        background-size: 24px 24px;
+      }
+
+      .canvas-spacer {
+        width: 900px;
+        height: 610px;
+      }
+
+      .edge-layer {
+        position: absolute;
+        left: 0;
+        top: 0;
+        width: 900px;
+        height: 610px;
+        pointer-events: none;
+      }
+
+      .edge-layer path {
+        fill: none;
+        stroke: #bbb2a2;
+        stroke-width: 2;
+      }
+
+      .node-card {
+        position: absolute;
+        width: 228px;
+        min-height: 122px;
+        border: 1px solid var(--border);
+        border-radius: var(--radius);
+        background: rgb(255 253 250 / 94%);
+        box-shadow: var(--shadow-soft);
+      }
+
+      .node-card.running {
+        border-color: var(--warning);
+      }
+
+      .node-card.completed, .node-card.observed {
+        border-color: #9ed7c8;
+      }
+
+      .node-card.failed {
+        border-color: #e6a39c;
+      }
+
+      .node-head {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 8px;
+        padding: 10px 12px;
+        border-bottom: 1px solid var(--border);
+        font-weight: 800;
+      }
+
+      .node-body {
+        display: grid;
+        gap: 7px;
+        padding: 10px 12px;
+        font-size: 13px;
+      }
+
+      .node-row {
+        display: flex;
+        justify-content: space-between;
+        gap: 10px;
+      }
+
+      .node-row span:first-child {
+        color: var(--muted);
+      }
+
+      .node-row span:last-child {
+        overflow: hidden;
+        text-align: right;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+      }
+
+      .badge {
+        display: inline-flex;
+        align-items: center;
+        max-width: 100%;
+        min-height: 22px;
+        padding: 2px 7px;
+        border-radius: var(--radius-small);
+        background: var(--accent-soft);
+        color: var(--muted);
+        font-size: 12px;
+        font-weight: 700;
+      }
+
+      .badge.completed, .badge.allow, .badge.observed {
+        background: #e5f6ef;
+        color: var(--success);
+      }
+
+      .badge.running, .badge.ask, .badge.unknown {
+        background: #fff2dc;
+        color: var(--warning);
+      }
+
+      .badge.failed, .badge.deny {
+        background: #ffe9e6;
+        color: var(--danger);
+      }
+
+      .timeline-tools {
+        display: flex;
+        gap: 8px;
+        align-items: center;
+      }
+
+      .timeline-tools select {
+        width: 220px;
+      }
 
       .timeline {
         display: grid;
         gap: 8px;
+        max-height: 610px;
+        overflow: auto;
+        padding: 14px;
       }
 
       .event {
         width: 100%;
+        min-height: 66px;
         padding: 10px 12px;
-        border: 1px solid var(--border);
-        border-radius: var(--radius);
-        background: var(--surface);
         text-align: left;
       }
 
@@ -140,149 +546,310 @@
 
       .event-head {
         display: flex;
-        gap: 8px;
+        gap: 10px;
         align-items: center;
         justify-content: space-between;
-        min-width: 0;
       }
 
       .event-type {
+        min-width: 0;
         overflow: hidden;
         text-overflow: ellipsis;
         white-space: nowrap;
-        font-size: 13px;
-        font-weight: 650;
+        font-weight: 800;
       }
-
-      .badge {
-        flex: 0 0 auto;
-        padding: 2px 7px;
-        border-radius: 999px;
-        background: var(--surface-muted);
-        color: var(--muted);
-        font-size: 11px;
-      }
-
-      .badge.allow, .badge.completed { color: var(--success); background: #e4f4eb; }
-      .badge.ask, .badge.running, .badge.unknown { color: var(--warning); background: #fff2dc; }
-      .badge.deny, .badge.failed { color: var(--danger); background: #fde8e5; }
 
       .event-copy {
-        margin-top: 5px;
+        margin-top: 6px;
         color: var(--muted);
-        font-size: 12px;
+        font-size: 13px;
+        line-height: 1.35;
         overflow-wrap: anywhere;
       }
 
-      .detail {
-        padding: 12px;
-        border: 1px solid var(--border);
-        border-radius: var(--radius);
+      .rail {
+        min-width: 0;
+        padding: 16px;
+        border-left: 1px solid var(--border);
         background: var(--surface);
-        margin-bottom: 12px;
+      }
+
+      .rail-section {
+        padding-bottom: 16px;
+        margin-bottom: 16px;
+        border-bottom: 1px solid var(--border);
+      }
+
+      .rail-section:last-child {
+        border-bottom: 0;
+      }
+
+      .rail h2 {
+        margin: 0 0 12px;
+        font-size: 16px;
       }
 
       pre {
-        max-height: 320px;
+        max-height: 300px;
         overflow: auto;
         margin: 0;
         padding: 12px;
-        border-radius: var(--radius);
+        border-radius: var(--radius-small);
         background: var(--code);
-        color: #f9fafb;
-        font-family: "SFMono-Regular", Consolas, "Liberation Mono", monospace;
+        color: #fffaf1;
         font-size: 12px;
         line-height: 1.45;
       }
 
       .artifact {
+        display: grid;
+        gap: 6px;
         padding: 10px 0;
         border-bottom: 1px solid var(--border);
       }
 
-      .artifact:last-child { border-bottom: 0; }
+      .artifact:last-child {
+        border-bottom: 0;
+      }
 
-      .error {
-        display: none;
-        padding: 10px;
-        border: 1px solid #f1b8b2;
-        border-radius: var(--radius);
-        background: #fde8e5;
-        color: var(--danger);
-        font-size: 13px;
+      .artifact-title {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 8px;
+        font-weight: 800;
       }
 
       .empty {
-        padding: 20px;
+        display: grid;
+        min-height: 118px;
+        place-items: center;
+        padding: 18px;
         border: 1px dashed var(--border);
         border-radius: var(--radius);
-        background: var(--surface);
-        color: var(--muted);
+        background: var(--surface-muted);
+        color: var(--soft);
         text-align: center;
       }
 
-      @media (max-width: 980px) {
+      .json-fallback {
+        min-height: 118px;
+        font-family: "SFMono-Regular", Consolas, "Liberation Mono", monospace;
+        font-size: 12px;
+      }
+
+      @media (max-width: 1200px) {
         .app {
+          grid-template-columns: 220px minmax(0, 1fr);
+        }
+        .rail {
+          grid-column: 1 / -1;
+          border-left: 0;
+          border-top: 1px solid var(--border);
+        }
+      }
+
+      @media (max-width: 900px) {
+        .app, .content {
           grid-template-columns: 1fr;
         }
-        .panel {
+        .sidebar {
+          min-height: auto;
           border-right: 0;
           border-bottom: 1px solid var(--border);
+        }
+        .topbar {
+          align-items: flex-start;
+          flex-direction: column;
+          padding: 14px;
+        }
+        .top-actions {
+          flex-wrap: wrap;
+        }
+        .timeline-tools,
+        .timeline-tools select {
+          width: 100%;
+        }
+        .status-strip, .field-row, .check-grid {
+          grid-template-columns: 1fr;
         }
       }
     </style>
   </head>
   <body>
     <main class="app">
-      <aside class="panel">
-        <h1 class="title">Trace Observer</h1>
-        <p class="subtle">Load local runs from <code>npm.cmd run trace:serve</code>, or paste JSON from <code>run:inspect --json</code>.</p>
-        <div class="stack">
-          <select id="runSelect" aria-label="Run list">
-            <option value="">No runs loaded</option>
-          </select>
-          <div class="toolbar">
-            <button class="primary" id="refreshButton">Refresh</button>
-            <button id="loadRunButton">Load Run</button>
-          </div>
+      <aside class="sidebar">
+        <div class="brand">
+          <div class="brand-mark">A</div>
+          <div>Agent Canvas</div>
         </div>
-        <textarea id="jsonInput" spellcheck="false" aria-label="Trace JSON input"></textarea>
-        <div class="toolbar">
-          <button id="loadButton">Load JSON</button>
-          <button id="sampleButton">Sample</button>
+        <nav class="nav" aria-label="Workspace">
+          <div class="nav-item active">+ New Task</div>
+          <div class="nav-item">[] Skills</div>
+          <div class="nav-item">o Automation</div>
+        </nav>
+        <div class="sidebar-label">Local Runs</div>
+        <div class="run-list" id="runList">
+          <div class="empty">No runs loaded.</div>
         </div>
-        <div class="error" id="errorBox"></div>
-        <div id="summary"></div>
+        <div class="sidebar-footer">
+          <span>Local runtime</span>
+          <button class="ghost" id="refreshButton">Refresh</button>
+        </div>
       </aside>
 
-      <section class="panel">
-        <div class="toolbar">
-          <select id="typeFilter" aria-label="Filter events">
-            <option value="all">All events</option>
-          </select>
-        </div>
-        <div class="timeline" id="timeline">
-          <div class="empty">No trace loaded.</div>
+      <section class="workspace">
+        <header class="topbar">
+          <div class="title-block">
+            <h1 class="title">Code with Agent Canvas</h1>
+            <div class="subtitle" id="runSubtitle">Configure a local workflow, run it, then inspect canvas events and artifacts.</div>
+          </div>
+          <div class="top-actions">
+            <div class="tabs" role="tablist" aria-label="Workbench views">
+              <button class="tab active" data-view-tab="canvas">Canvas</button>
+              <button class="tab" data-view-tab="trace">Trace</button>
+              <button class="tab" data-view-tab="json">JSON</button>
+            </div>
+            <button class="primary" id="runButton">Run</button>
+          </div>
+        </header>
+
+        <div class="content">
+          <section class="panel" aria-label="Task composer">
+            <div class="panel-head">
+              <div class="panel-title">New Task</div>
+              <span class="badge" id="engineBadge">fake</span>
+            </div>
+            <div class="panel-body">
+              <form class="stack" id="runForm">
+                <div class="field">
+                  <label for="promptInput">Prompt</label>
+                  <textarea id="promptInput" spellcheck="false">Analyze this project and propose a safe next step.</textarea>
+                </div>
+
+                <div class="field-row">
+                  <div class="field">
+                    <label for="engineInput">Engine</label>
+                    <select id="engineInput">
+                      <option value="fake">Fake runtime</option>
+                      <option value="opencode">OpenCode backend</option>
+                    </select>
+                  </div>
+                  <div class="field">
+                    <label for="definitionModeInput">Definition</label>
+                    <select id="definitionModeInput">
+                      <option value="group">Multi-agent group</option>
+                      <option value="workflow">Workflow file</option>
+                    </select>
+                  </div>
+                </div>
+
+                <div class="field" id="groupField">
+                  <label for="groupInput">Group path</label>
+                  <input id="groupInput" value="examples/groups/balanced-coding-group.json" />
+                </div>
+
+                <div class="field" id="workflowField">
+                  <label for="workflowInput">Workflow path</label>
+                  <input id="workflowInput" value="examples/workflows/research-code.json" />
+                </div>
+
+                <div class="field">
+                  <label for="configInput">Config path</label>
+                  <input id="configInput" value="agentcanvas.config.example.json" />
+                </div>
+
+                <div class="field-row">
+                  <div class="field">
+                    <label for="timeoutInput">Timeout ms</label>
+                    <input id="timeoutInput" type="number" min="1000" step="1000" value="90000" />
+                  </div>
+                  <div class="field">
+                    <label for="maxNodesInput">Max OpenCode nodes</label>
+                    <input id="maxNodesInput" type="number" min="1" step="1" value="1" />
+                  </div>
+                </div>
+
+                <div class="field">
+                  <label>OpenCode permissions</label>
+                  <div class="check-grid">
+                    <div class="check-row"><input id="allowEditsInput" type="checkbox" /><label for="allowEditsInput">Edit</label></div>
+                    <div class="check-row"><input id="allowShellInput" type="checkbox" /><label for="allowShellInput">Shell</label></div>
+                    <div class="check-row"><input id="allowNetworkInput" type="checkbox" /><label for="allowNetworkInput">Network</label></div>
+                  </div>
+                  <div class="hint">Leave these off for read-only OpenCode smoke tests.</div>
+                </div>
+
+                <div class="error" id="errorBox"></div>
+              </form>
+
+              <div class="status-strip" id="summary"></div>
+            </div>
+          </section>
+
+          <section class="panel" aria-label="Execution views">
+            <div class="panel-head">
+              <div class="panel-title" id="mainPanelTitle">Agent Canvas</div>
+              <div class="timeline-tools">
+                <select id="typeFilter" aria-label="Filter events">
+                  <option value="all">All events</option>
+                </select>
+              </div>
+            </div>
+            <div class="view active" id="canvasView">
+              <div class="canvas" id="canvas">
+                <div class="empty">Run a task or load a local run to see the canvas.</div>
+              </div>
+            </div>
+            <div class="view" id="traceView">
+              <div class="timeline" id="timeline">
+                <div class="empty">No trace loaded.</div>
+              </div>
+            </div>
+            <div class="view" id="jsonView">
+              <div class="panel-body">
+                <textarea class="json-fallback" id="jsonInput" spellcheck="false" aria-label="Trace JSON input"></textarea>
+                <div class="top-actions" style="margin-top: 10px;">
+                  <button id="loadJsonButton">Load JSON</button>
+                  <button id="sampleButton">Sample</button>
+                </div>
+              </div>
+            </div>
+          </section>
         </div>
       </section>
 
-      <aside class="panel">
-        <h2 class="title">Detail</h2>
-        <div class="detail" id="eventDetail">
-          <div class="empty">Select an event.</div>
-        </div>
-        <h2 class="title">Artifacts</h2>
-        <div class="detail" id="artifactList">
-          <div class="empty">No artifacts.</div>
-        </div>
+      <aside class="rail">
+        <section class="rail-section">
+          <h2>Run</h2>
+          <div id="runDetail">
+            <div class="empty">No run selected.</div>
+          </div>
+        </section>
+        <section class="rail-section">
+          <h2>Selected Event</h2>
+          <div id="eventDetail">
+            <div class="empty">Select an event.</div>
+          </div>
+        </section>
+        <section class="rail-section">
+          <h2>Artifacts</h2>
+          <div id="artifactList">
+            <div class="empty">No artifacts.</div>
+          </div>
+        </section>
       </aside>
     </main>
 
     <script>
       const state = {
         trace: null,
+        runs: [],
+        selectedRunId: null,
         selectedEventId: null,
-        filter: "all"
+        filter: "all",
+        view: "canvas",
+        loading: false
       };
 
       const sampleTrace = {
@@ -301,46 +868,133 @@
         ],
         events: [
           { id: "event_prompt", type: "user.prompt.submitted", sessionId: "session_sample", timestamp: "2026-06-29T00:00:00.000Z", prompt: "Reply with OK only." },
-          { id: "event_policy", type: "permission.policy.loaded", sessionId: "session_sample", timestamp: "2026-06-29T00:00:01.000Z", source: "opencode-tool-policy", defaultDecision: "deny", policy: { edit: "deny", bash: "deny" } },
+          { id: "event_engine", type: "engine.selected", sessionId: "session_sample", timestamp: "2026-06-29T00:00:00.200Z", engineId: "balanced-coding-group", engineType: "workflow" },
+          { id: "event_workflow", type: "workflow.loaded", sessionId: "session_sample", timestamp: "2026-06-29T00:00:00.400Z", workflowId: "balanced-coding-group", workflowName: "Balanced Coding Group" },
+          { id: "event_compiled", type: "workflow.compiled", sessionId: "session_sample", timestamp: "2026-06-29T00:00:00.600Z", workflowId: "balanced-coding-group", planId: "plan_sample", nodeCount: 4, edgeCount: 3 },
+          { id: "event_route", type: "model.route.selected", sessionId: "session_sample", timestamp: "2026-06-29T00:00:01.000Z", nodeId: "coder", route: "code", selectedModel: "deepseek-v4-flash", reason: "User configured coder strategy." },
+          { id: "event_policy", type: "permission.policy.loaded", sessionId: "session_sample", timestamp: "2026-06-29T00:00:01.200Z", source: "opencode-tool-policy", defaultDecision: "deny", policy: { edit: "deny", bash: "deny" } },
           { id: "event_session", type: "backend.session.observed", sessionId: "session_sample", timestamp: "2026-06-29T00:00:02.000Z", nodeId: "coder", backend: "opencode", externalSessionId: "ses_sample", status: "completed", messageCount: 2, diffCount: 1 },
           { id: "event_perm", type: "permission.checked", sessionId: "session_sample", timestamp: "2026-06-29T00:00:03.000Z", nodeId: "coder", scope: "filesystem.patch", decision: "ask", reason: "Scope filesystem.patch matched configured static policy." },
-          { id: "event_artifact", type: "artifact.created", sessionId: "session_sample", timestamp: "2026-06-29T00:00:04.000Z", nodeId: "coder", artifact: { id: "artifact_report", kind: "report", title: "OpenCode coder result", content: "OK" } }
+          { id: "event_artifact", type: "artifact.created", sessionId: "session_sample", timestamp: "2026-06-29T00:00:04.000Z", nodeId: "coder", artifact: { id: "artifact_report", kind: "report", title: "OpenCode coder result", content: "OK" } },
+          { id: "event_done", type: "workflow.completed", sessionId: "session_sample", timestamp: "2026-06-29T00:00:05.000Z", workflowId: "balanced-coding-group", planId: "plan_sample" }
         ]
       };
 
-      document.getElementById("loadButton").addEventListener("click", () => loadTrace(document.getElementById("jsonInput").value));
-      document.getElementById("refreshButton").addEventListener("click", refreshRuns);
-      document.getElementById("loadRunButton").addEventListener("click", loadSelectedRun);
-      document.getElementById("sampleButton").addEventListener("click", () => {
-        document.getElementById("jsonInput").value = JSON.stringify(sampleTrace, null, 2);
-        loadTrace(document.getElementById("jsonInput").value);
+      const elements = {
+        runButton: document.getElementById("runButton"),
+        refreshButton: document.getElementById("refreshButton"),
+        runForm: document.getElementById("runForm"),
+        promptInput: document.getElementById("promptInput"),
+        engineInput: document.getElementById("engineInput"),
+        definitionModeInput: document.getElementById("definitionModeInput"),
+        groupInput: document.getElementById("groupInput"),
+        workflowInput: document.getElementById("workflowInput"),
+        configInput: document.getElementById("configInput"),
+        timeoutInput: document.getElementById("timeoutInput"),
+        maxNodesInput: document.getElementById("maxNodesInput"),
+        allowEditsInput: document.getElementById("allowEditsInput"),
+        allowShellInput: document.getElementById("allowShellInput"),
+        allowNetworkInput: document.getElementById("allowNetworkInput"),
+        groupField: document.getElementById("groupField"),
+        workflowField: document.getElementById("workflowField"),
+        errorBox: document.getElementById("errorBox"),
+        engineBadge: document.getElementById("engineBadge"),
+        runList: document.getElementById("runList"),
+        runSubtitle: document.getElementById("runSubtitle"),
+        summary: document.getElementById("summary"),
+        typeFilter: document.getElementById("typeFilter"),
+        mainPanelTitle: document.getElementById("mainPanelTitle"),
+        canvas: document.getElementById("canvas"),
+        timeline: document.getElementById("timeline"),
+        jsonInput: document.getElementById("jsonInput"),
+        loadJsonButton: document.getElementById("loadJsonButton"),
+        sampleButton: document.getElementById("sampleButton"),
+        runDetail: document.getElementById("runDetail"),
+        eventDetail: document.getElementById("eventDetail"),
+        artifactList: document.getElementById("artifactList")
+      };
+
+      elements.runButton.addEventListener("click", () => submitRun());
+      elements.runForm.addEventListener("submit", (event) => {
+        event.preventDefault();
+        submitRun();
       });
-      document.getElementById("typeFilter").addEventListener("change", (event) => {
+      elements.refreshButton.addEventListener("click", refreshRuns);
+      elements.engineInput.addEventListener("change", renderControls);
+      elements.definitionModeInput.addEventListener("change", renderControls);
+      elements.typeFilter.addEventListener("change", (event) => {
         state.filter = event.target.value;
         render();
       });
+      elements.loadJsonButton.addEventListener("click", () => loadTrace(elements.jsonInput.value));
+      elements.sampleButton.addEventListener("click", () => {
+        applyTrace(sampleTrace);
+      });
+      document.querySelectorAll("[data-view-tab]").forEach((button) => {
+        button.addEventListener("click", () => {
+          state.view = button.getAttribute("data-view-tab");
+          render();
+        });
+      });
+
+      renderControls();
       refreshRuns();
 
-      async function refreshRuns() {
+      async function submitRun() {
+        const payload = createRunPayload();
+        if (!payload.prompt.trim()) {
+          showError("Prompt is required.");
+          return;
+        }
+
+        setLoading(true);
+        showError("");
         try {
-          const response = await fetch("/api/runs?limit=50", { cache: "no-store" });
-          if (!response.ok) throw new Error(`Run API unavailable (${response.status}). Start with: npm.cmd run trace:serve`);
-          const payload = await response.json();
-          const runs = Array.isArray(payload.runs) ? payload.runs : [];
-          const select = document.getElementById("runSelect");
-          select.innerHTML = runs.length === 0
-            ? '<option value="">No runs found</option>'
-            : runs.map((run) => `<option value="${escapeHtml(run.sessionId)}">${escapeHtml(run.updatedAt)} · ${escapeHtml(run.engineId ?? "unknown")} · ${escapeHtml(run.workflowName ?? run.workflowId ?? "unknown")}</option>`).join("");
-          if (runs[0]) await loadRun(runs[0].sessionId);
+          const response = await fetch("/api/runs", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(payload)
+          });
+          const responseText = await response.text();
+          const body = responseText ? JSON.parse(responseText) : {};
+          if (!response.ok) throw new Error(body.error ?? `Run failed with HTTP ${response.status}`);
+          applyTrace(body);
+          await refreshRuns({ keepSelection: true });
         } catch (error) {
           showError(error instanceof Error ? error.message : String(error));
+        } finally {
+          setLoading(false);
         }
       }
 
-      async function loadSelectedRun() {
-        const sessionId = document.getElementById("runSelect").value;
-        if (!sessionId) return;
-        await loadRun(sessionId);
+      function createRunPayload() {
+        const definitionMode = elements.definitionModeInput.value;
+        return {
+          prompt: elements.promptInput.value,
+          engine: elements.engineInput.value,
+          workflow: definitionMode === "workflow" ? elements.workflowInput.value.trim() : undefined,
+          group: definitionMode === "group" ? elements.groupInput.value.trim() : undefined,
+          config: elements.configInput.value.trim() || undefined,
+          allowOpenCodeEdits: elements.allowEditsInput.checked,
+          allowOpenCodeShell: elements.allowShellInput.checked,
+          allowOpenCodeNetwork: elements.allowNetworkInput.checked,
+          timeoutMs: Number(elements.timeoutInput.value || 90000),
+          maxNodes: Number(elements.maxNodesInput.value || 1)
+        };
+      }
+
+      async function refreshRuns(options = {}) {
+        try {
+          const response = await fetch("/api/runs?limit=60", { cache: "no-store" });
+          if (!response.ok) throw new Error(`Run API unavailable (${response.status}). Start with: npm.cmd run trace:serve`);
+          const payload = await response.json();
+          state.runs = Array.isArray(payload.runs) ? payload.runs : [];
+          renderRunList();
+          if (!options.keepSelection && state.runs[0]) await loadRun(state.runs[0].sessionId);
+        } catch (error) {
+          showError(error instanceof Error ? error.message : String(error));
+          renderRunList();
+        }
       }
 
       async function loadRun(sessionId) {
@@ -348,7 +1002,6 @@
           const response = await fetch(`/api/runs/${encodeURIComponent(sessionId)}`, { cache: "no-store" });
           if (!response.ok) throw new Error(`Run ${sessionId} unavailable (${response.status}).`);
           const trace = await response.json();
-          document.getElementById("jsonInput").value = JSON.stringify(trace, null, 2);
           applyTrace(trace);
         } catch (error) {
           showError(error instanceof Error ? error.message : String(error));
@@ -364,61 +1017,250 @@
         }
       }
 
-      function applyTrace(parsed) {
-        if (!Array.isArray(parsed.events)) throw new Error("Trace JSON must include an events array.");
-        state.trace = parsed;
-        state.selectedEventId = parsed.events[0]?.id ?? null;
+      function applyTrace(trace) {
+        if (!Array.isArray(trace.events)) throw new Error("Trace JSON must include an events array.");
+        state.trace = trace;
+        state.selectedRunId = trace.sessionId ?? null;
+        state.selectedEventId = trace.events[0]?.id ?? null;
         state.filter = "all";
-        document.getElementById("errorBox").style.display = "none";
+        elements.typeFilter.value = "all";
+        elements.jsonInput.value = JSON.stringify(trace, null, 2);
+        showError("");
         renderFilters();
         render();
       }
 
+      function setLoading(value) {
+        state.loading = value;
+        elements.runButton.disabled = value;
+        elements.runButton.textContent = value ? "Running" : "Run";
+      }
+
       function showError(message) {
-        const box = document.getElementById("errorBox");
-        box.textContent = message;
-        box.style.display = "block";
+        elements.errorBox.textContent = message;
+        elements.errorBox.style.display = message ? "block" : "none";
+      }
+
+      function renderControls() {
+        const mode = elements.definitionModeInput.value;
+        elements.groupField.style.display = mode === "group" ? "grid" : "none";
+        elements.workflowField.style.display = mode === "workflow" ? "grid" : "none";
+        elements.engineBadge.textContent = elements.engineInput.value;
       }
 
       function renderFilters() {
-        const filter = document.getElementById("typeFilter");
         const types = [...new Set((state.trace?.events ?? []).map((event) => event.type))].sort();
-        filter.innerHTML = '<option value="all">All events</option>' + types.map((type) => `<option value="${escapeHtml(type)}">${escapeHtml(type)}</option>`).join("");
-        filter.value = state.filter;
+        elements.typeFilter.innerHTML = '<option value="all">All events</option>' + types.map((type) => `<option value="${escapeHtml(type)}">${escapeHtml(type)}</option>`).join("");
+        elements.typeFilter.value = state.filter;
       }
 
       function render() {
+        renderTabs();
+        renderControls();
+        renderRunList();
         renderSummary();
+        renderRunDetail();
+        renderCanvas();
         renderTimeline();
         renderDetail();
         renderArtifacts();
       }
 
-      function renderSummary() {
-        const summary = document.getElementById("summary");
-        const trace = state.trace;
-        if (!trace) {
-          summary.innerHTML = "";
+      function renderTabs() {
+        document.querySelectorAll("[data-view-tab]").forEach((button) => {
+          button.classList.toggle("active", button.getAttribute("data-view-tab") === state.view);
+        });
+        document.querySelectorAll(".view").forEach((view) => view.classList.remove("active"));
+        document.getElementById(`${state.view}View`).classList.add("active");
+        elements.mainPanelTitle.textContent = state.view === "canvas" ? "Agent Canvas" : state.view === "trace" ? "Trace Timeline" : "Trace JSON";
+        elements.typeFilter.style.display = state.view === "trace" ? "block" : "none";
+      }
+
+      function renderRunList() {
+        if (state.runs.length === 0) {
+          elements.runList.innerHTML = '<div class="empty">No local runs yet.</div>';
           return;
         }
-        summary.innerHTML = [
-          metric("Session", trace.sessionId ?? "unknown"),
+        elements.runList.innerHTML = state.runs.map((run) => {
+          const active = run.sessionId === state.selectedRunId ? " active" : "";
+          const title = run.workflowName ?? run.workflowId ?? run.engineId ?? "Local run";
+          const meta = `${run.updatedAt ?? ""} / ${run.engineId ?? "unknown"}`;
+          return `
+            <button class="run-item${active}" data-run-id="${escapeHtml(run.sessionId)}">
+              <span>${escapeHtml(title)}</span>
+              <span class="meta">${escapeHtml(meta)}</span>
+            </button>
+          `;
+        }).join("");
+        elements.runList.querySelectorAll("[data-run-id]").forEach((button) => {
+          button.addEventListener("click", () => loadRun(button.getAttribute("data-run-id")));
+        });
+      }
+
+      function renderSummary() {
+        const trace = state.trace;
+        if (!trace) {
+          elements.summary.innerHTML = [
+            metric("Engine", elements.engineInput.value),
+            metric("Definition", elements.definitionModeInput.value),
+            metric("Events", "0"),
+            metric("Artifacts", "0")
+          ].join("");
+          return;
+        }
+        elements.summary.innerHTML = [
           metric("Status", trace.status ?? "unknown"),
-          metric("Estimated USD", Number(trace.estimatedUsd ?? 0).toFixed(4)),
+          metric("Cost", `$${Number(trace.estimatedUsd ?? 0).toFixed(4)}`),
           metric("Events", String(trace.events?.length ?? 0)),
           metric("Artifacts", String(trace.artifacts?.length ?? 0))
         ].join("");
+        const workflow = findEvent("workflow.loaded");
+        elements.runSubtitle.textContent = `${trace.sessionId ?? "unknown"} / ${workflow?.workflowName ?? workflow?.workflowId ?? "local run"}`;
+      }
+
+      function renderRunDetail() {
+        const trace = state.trace;
+        if (!trace) {
+          elements.runDetail.innerHTML = '<div class="empty">No run selected.</div>';
+          return;
+        }
+        const engine = findEvent("engine.selected");
+        const workflow = findEvent("workflow.loaded");
+        const compiled = findEvent("workflow.compiled");
+        const policy = findEvent("permission.policy.loaded");
+        elements.runDetail.innerHTML = `
+          ${railMetric("Session", trace.sessionId ?? "unknown")}
+          ${railMetric("Engine", engine?.engineId ?? "unknown")}
+          ${railMetric("Workflow", workflow?.workflowName ?? workflow?.workflowId ?? "unknown")}
+          ${railMetric("Plan", compiled ? `${compiled.nodeCount} nodes / ${compiled.edgeCount} edges` : "not compiled")}
+          ${railMetric("Policy", policy ? `${policy.source} / default ${policy.defaultDecision}` : "not loaded")}
+        `;
+      }
+
+      function renderCanvas() {
+        const trace = state.trace;
+        if (!trace) {
+          elements.canvas.innerHTML = '<div class="empty">Run a task or load a local run to see the canvas.</div>';
+          return;
+        }
+        const projection = projectCanvas(trace.events);
+        if (projection.nodes.length === 0) {
+          elements.canvas.innerHTML = '<div class="empty">No agent nodes were observed in this run.</div>';
+          return;
+        }
+        elements.canvas.innerHTML = `
+          <div class="canvas-spacer"></div>
+          <svg class="edge-layer" viewBox="0 0 900 610" preserveAspectRatio="none" aria-hidden="true">
+            ${projection.edges.map((edge) => edgePath(edge, projection.nodes)).join("")}
+          </svg>
+          ${projection.nodes.map(nodeCard).join("")}
+        `;
+      }
+
+      function projectCanvas(events) {
+        const known = new Map();
+        const workflow = findEvent("workflow.loaded");
+        const isGroup = String(workflow?.workflowId ?? "").includes("group") || String(workflow?.workflowName ?? "").includes("Group");
+        const defaults = isGroup
+          ? ["supervisor", "researcher", "coder", "reviewer"]
+          : ["supervisor", "researcher", "coder", "reviewer"];
+
+        defaults.forEach((id) => known.set(id, {
+          id,
+          role: id,
+          status: "pending",
+          route: id === "supervisor" ? "planning" : id,
+          model: "user configured",
+          tools: id === "coder" ? "read_file, propose_patch" : id === "reviewer" ? "diff, fake_test" : "project_search, read_file",
+          permissions: id === "coder" ? "read, patch" : "read"
+        }));
+
+        for (const event of events) {
+          const nodeId = event.nodeId;
+          if (!nodeId) continue;
+          if (!known.has(nodeId)) known.set(nodeId, { id: nodeId, role: nodeId, status: "pending" });
+          const node = known.get(nodeId);
+          if (event.type === "agent.started") {
+            node.role = event.role ?? node.role;
+            node.status = "running";
+          }
+          if (event.type === "model.route.selected") {
+            node.route = event.route;
+            node.model = event.selectedModel;
+          }
+          if (event.type === "backend.session.observed") {
+            node.model = event.backend;
+            node.status = event.status === "completed" ? "observed" : event.status;
+          }
+          if (event.type === "permission.checked") {
+            node.permissions = `${event.scope}: ${event.decision}`;
+          }
+          if (event.type === "agent.completed") {
+            node.status = event.status;
+          }
+          if (event.type === "workflow.failed") {
+            node.status = "failed";
+          }
+        }
+
+        const nodes = [...known.values()].map((node, index) => ({ ...node, ...positionFor(node.id, index) }));
+        const edges = nodes.some((node) => node.id === "supervisor")
+          ? [
+              ["supervisor", "researcher"],
+              ["researcher", "coder"],
+              ["coder", "reviewer"]
+            ].filter(([from, to]) => known.has(from) && known.has(to))
+          : nodes.slice(1).map((node, index) => [nodes[index].id, node.id]);
+        return { nodes, edges };
+      }
+
+      function positionFor(id, index) {
+        const positions = {
+          supervisor: { x: 52, y: 250 },
+          researcher: { x: 336, y: 148 },
+          coder: { x: 336, y: 318 },
+          reviewer: { x: 620, y: 250 }
+        };
+        return positions[id] ?? { x: 80 + (index % 3) * 270, y: 80 + Math.floor(index / 3) * 170 };
+      }
+
+      function edgePath(edge, nodes) {
+        const from = nodes.find((node) => node.id === edge[0]);
+        const to = nodes.find((node) => node.id === edge[1]);
+        if (!from || !to) return "";
+        const x1 = from.x + 228;
+        const y1 = from.y + 61;
+        const x2 = to.x;
+        const y2 = to.y + 61;
+        const mid = (x1 + x2) / 2;
+        return `<path d="M ${x1} ${y1} C ${mid} ${y1}, ${mid} ${y2}, ${x2} ${y2}" />`;
+      }
+
+      function nodeCard(node) {
+        return `
+          <article class="node-card ${escapeHtml(node.status)}" style="left: ${node.x}px; top: ${node.y}px;">
+            <div class="node-head">
+              <span>${escapeHtml(titleCase(node.role ?? node.id))}</span>
+              <span class="badge ${escapeHtml(node.status)}">${escapeHtml(node.status)}</span>
+            </div>
+            <div class="node-body">
+              <div class="node-row"><span>Route</span><span>${escapeHtml(node.route ?? "-")}</span></div>
+              <div class="node-row"><span>Model</span><span>${escapeHtml(node.model ?? "-")}</span></div>
+              <div class="node-row"><span>Tools</span><span>${escapeHtml(node.tools ?? "-")}</span></div>
+              <div class="node-row"><span>Policy</span><span>${escapeHtml(node.permissions ?? "-")}</span></div>
+            </div>
+          </article>
+        `;
       }
 
       function renderTimeline() {
-        const timeline = document.getElementById("timeline");
         const events = filteredEvents();
         if (events.length === 0) {
-          timeline.innerHTML = '<div class="empty">No matching events.</div>';
+          elements.timeline.innerHTML = '<div class="empty">No matching events.</div>';
           return;
         }
-        timeline.innerHTML = events.map((event) => eventButton(event)).join("");
-        timeline.querySelectorAll("[data-event-id]").forEach((button) => {
+        elements.timeline.innerHTML = events.map((event) => eventButton(event)).join("");
+        elements.timeline.querySelectorAll("[data-event-id]").forEach((button) => {
           button.addEventListener("click", () => {
             state.selectedEventId = button.getAttribute("data-event-id");
             render();
@@ -427,26 +1269,27 @@
       }
 
       function renderDetail() {
-        const detail = document.getElementById("eventDetail");
         const event = (state.trace?.events ?? []).find((item) => item.id === state.selectedEventId);
         if (!event) {
-          detail.innerHTML = '<div class="empty">Select an event.</div>';
+          elements.eventDetail.innerHTML = '<div class="empty">Select an event.</div>';
           return;
         }
-        detail.innerHTML = `<pre>${escapeHtml(JSON.stringify(event, null, 2))}</pre>`;
+        elements.eventDetail.innerHTML = `<pre>${escapeHtml(JSON.stringify(event, null, 2))}</pre>`;
       }
 
       function renderArtifacts() {
-        const list = document.getElementById("artifactList");
         const artifacts = state.trace?.artifacts ?? [];
         if (artifacts.length === 0) {
-          list.innerHTML = '<div class="empty">No artifacts.</div>';
+          elements.artifactList.innerHTML = '<div class="empty">No artifacts.</div>';
           return;
         }
-        list.innerHTML = artifacts.map((artifact) => `
+        elements.artifactList.innerHTML = artifacts.map((artifact) => `
           <div class="artifact">
-            <div><strong>${escapeHtml(artifact.title)}</strong> <span class="badge">${escapeHtml(artifact.kind)}</span></div>
-            <div class="subtle">${escapeHtml(artifact.id)}</div>
+            <div class="artifact-title">
+              <span>${escapeHtml(artifact.title)}</span>
+              <span class="badge">${escapeHtml(artifact.kind)}</span>
+            </div>
+            <div class="hint">${escapeHtml(artifact.id)}</div>
             <div class="event-copy">${escapeHtml(summarizeArtifact(artifact))}</div>
           </div>
         `).join("");
@@ -473,33 +1316,49 @@
       }
 
       function statusBadge(event) {
-        const value = event.decision ?? event.status ?? event.artifact?.kind ?? "";
+        const value = event.decision ?? event.status ?? event.artifact?.kind ?? event.engineType ?? "";
         if (!value) return "";
         return `<span class="badge ${escapeHtml(String(value))}">${escapeHtml(String(value))}</span>`;
       }
 
       function eventSummary(event) {
+        if (event.type === "user.prompt.submitted") return event.prompt;
+        if (event.type === "engine.selected") return `${event.engineId} / ${event.engineType}`;
+        if (event.type === "workflow.loaded") return `${event.workflowName} (${event.workflowId})`;
+        if (event.type === "workflow.compiled") return `${event.nodeCount} nodes, ${event.edgeCount} edges`;
         if (event.type === "backend.session.observed") return `${event.nodeId} ${event.backend}/${event.externalSessionId} messages=${event.messageCount} diffs=${event.diffCount}`;
         if (event.type === "permission.checked") return `${event.nodeId} ${event.scope} -> ${event.decision}`;
-        if (event.type === "model.route.selected") return `${event.nodeId} -> ${event.selectedModel}`;
+        if (event.type === "model.route.selected") return `${event.nodeId} -> ${event.selectedModel}: ${event.reason}`;
         if (event.type === "artifact.created") return `${event.artifact.kind}: ${event.artifact.title}`;
-        if (event.type === "model.request.completed") return `${event.nodeId} ${event.model}: ${String(event.content ?? "").slice(0, 80)}`;
+        if (event.type === "model.request.completed") return `${event.nodeId} ${event.model}: ${String(event.content ?? "").slice(0, 100)}`;
         if (event.type === "workflow.failed") return event.message;
-        return event.nodeId ?? event.workflowId ?? event.engineId ?? event.prompt ?? event.timestamp ?? "";
+        return event.nodeId ?? event.workflowId ?? event.engineId ?? event.timestamp ?? "";
       }
 
       function summarizeArtifact(artifact) {
         const diffs = artifact.metadata?.diffs;
         if (Array.isArray(diffs) && diffs.length > 0) return diffs.map((diff) => `${diff.file} +${diff.additions ?? 0} -${diff.deletions ?? 0}`).join(", ");
-        return String(artifact.content ?? "").replace(/\\s+/g, " ").slice(0, 140);
+        return String(artifact.content ?? "").replace(/\s+/g, " ").slice(0, 180);
+      }
+
+      function findEvent(type) {
+        return (state.trace?.events ?? []).find((event) => event.type === type);
       }
 
       function metric(label, value) {
         return `<div class="metric"><span>${escapeHtml(label)}</span><strong>${escapeHtml(value)}</strong></div>`;
       }
 
+      function railMetric(label, value) {
+        return `<div class="metric" style="margin-bottom: 8px;"><span>${escapeHtml(label)}</span><strong>${escapeHtml(value)}</strong></div>`;
+      }
+
+      function titleCase(value) {
+        return String(value).replace(/[-_]/g, " ").replace(/\b\w/g, (letter) => letter.toUpperCase());
+      }
+
       function escapeHtml(value) {
-        return String(value)
+        return String(value ?? "")
           .replaceAll("&", "&amp;")
           .replaceAll("<", "&lt;")
           .replaceAll(">", "&gt;")

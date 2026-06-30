@@ -2,32 +2,73 @@
 <html lang="en">
   <head>
     <meta charset="utf-8" />
-    <title>Agent Canvas Trace Observer Wireframe</title>
+    <title>Agent Canvas Workbench Wireframe</title>
+    <link rel="stylesheet" href="./design-tokens.css" />
     <style>
-      body { margin: 0; font-family: system-ui, sans-serif; background: #f6f7f9; color: #17202a; }
-      main { display: grid; grid-template-columns: 280px 1fr 360px; min-height: 100vh; }
-      aside, section { padding: 16px; border-right: 1px solid #d8dde3; }
-      .bar { height: 40px; border: 1px solid #d8dde3; border-radius: 8px; background: white; margin-bottom: 12px; }
-      .event { height: 56px; border: 1px solid #d8dde3; border-radius: 8px; background: white; margin-bottom: 8px; }
-      .detail { height: 160px; border: 1px solid #d8dde3; border-radius: 8px; background: white; margin-bottom: 12px; }
+      * { box-sizing: border-box; }
+      body {
+        margin: 0;
+        min-height: 100vh;
+        background: var(--ac-bg);
+        color: var(--ac-text);
+        font-family: var(--ac-font);
+        font-size: var(--ac-font-size-body);
+      }
+      main {
+        display: grid;
+        grid-template-columns: 260px minmax(560px, 1fr) 340px;
+        min-height: 100vh;
+      }
+      aside, section { min-width: 0; border-right: 1px solid var(--ac-border); }
+      .sidebar { background: var(--ac-chrome); padding: 16px; }
+      .workspace { background: var(--ac-surface); }
+      .topbar {
+        height: 56px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 0 18px;
+        border-bottom: 1px solid var(--ac-border);
+      }
+      .content {
+        display: grid;
+        grid-template-columns: 360px 1fr;
+        gap: 18px;
+        padding: 18px;
+      }
+      .panel, .node, .composer {
+        border: 1px solid var(--ac-border);
+        border-radius: var(--ac-radius);
+        background: var(--ac-surface-strong);
+      }
+      .composer { min-height: 320px; }
+      .canvas {
+        min-height: 620px;
+        background-color: var(--ac-surface);
+        background-image: radial-gradient(var(--ac-bg-grid) 1px, transparent 1px);
+        background-size: 24px 24px;
+      }
+      .node { width: 220px; height: 112px; }
+      .rail { padding: 16px; background: var(--ac-surface); }
+      @media (max-width: 1100px) {
+        main, .content { grid-template-columns: 1fr; }
+      }
     </style>
   </head>
   <body>
     <main>
-      <aside>
-        <div class="bar"></div>
-        <div class="bar"></div>
-        <div class="bar"></div>
-      </aside>
-      <section>
-        <div class="event"></div>
-        <div class="event"></div>
-        <div class="event"></div>
+      <aside class="sidebar">Runs and navigation</aside>
+      <section class="workspace">
+        <div class="topbar">
+          <strong>Agent Canvas Workbench</strong>
+          <button>Run</button>
+        </div>
+        <div class="content">
+          <div class="composer">Task composer and engine selector</div>
+          <div class="panel canvas">Canvas observer or trace timeline</div>
+        </div>
       </section>
-      <aside>
-        <div class="detail"></div>
-        <div class="detail"></div>
-      </aside>
+      <aside class="rail">Event detail and artifacts</aside>
     </main>
   </body>
 </html>

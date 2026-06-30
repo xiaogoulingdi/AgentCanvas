@@ -1,16 +1,33 @@
 # Agent Canvas UI Data Models
 
-日期：2026-06-29
+Date: 2026-06-30
 
-## Trace Observer Input
+## Run Creation
 
-来自：
+The workbench calls the local trace server:
 
-```powershell
-npm.cmd run run:inspect -- --latest --json
+```http
+POST /api/runs
 ```
 
-结构：
+Request:
+
+```ts
+type CreateRunRequest = {
+  prompt: string;
+  engine?: "fake" | "opencode";
+  workflow?: string;
+  group?: string;
+  config?: string;
+  allowOpenCodeEdits?: boolean;
+  allowOpenCodeShell?: boolean;
+  allowOpenCodeNetwork?: boolean;
+  timeoutMs?: number;
+  maxNodes?: number;
+};
+```
+
+Response is the same trace inspect shape used by CLI:
 
 ```ts
 type TraceInspectJson = {
@@ -22,29 +39,44 @@ type TraceInspectJson = {
 };
 ```
 
-## 关键事件
+## Run Listing
 
-- `backend.session.observed`：外部 backend session，例如 OpenCode sessionId、messageCount、diffCount。
-- `permission.policy.loaded`：本次运行加载的权限策略。
-- `permission.checked`：节点级权限检查结果。
-- `artifact.created`：report、patch、trace、note。
-- `workflow.failed`：失败原因。
-
-## 后续 UI 数据来源
-
-当前支持：
-
-- 本地 dev server 读取 `.agent-canvas/runs/`：
-
-```text
-GET /api/runs
+```http
+GET /api/runs?limit=50
 GET /api/runs/latest
 GET /api/runs/:sessionId
 ```
 
-仍保留粘贴 JSON 作为 fallback。
+The sidebar uses run summaries from `JsonlEventLog.listRuns()`.
 
-后续可以改为：
+## Key Events
 
-- 桌面端主进程通过安全 IPC 暴露 run store。
-- Canvas trace panel 订阅 runtime event stream。
+- `user.prompt.submitted`: original prompt.
+- `engine.selected`: chosen engine type.
+- `workflow.loaded`: workflow/group identity.
+- `workflow.compiled`: node and edge counts.
+- `agent.started`: node entered runtime.
+- `backend.session.observed`: external backend session such as OpenCode.
+- `model.route.selected`: route/model decision for a node.
+- `permission.policy.loaded`: policy source and default decision.
+- `permission.checked`: concrete permission decision.
+- `artifact.created`: report, patch, trace, or note.
+- `workflow.completed` / `workflow.failed`: terminal state.
+
+## Canvas Projection
+
+The v0.1 canvas is projected from events, with fallbacks from known example workflow/group names.
+
+```ts
+type CanvasNodeView = {
+  id: string;
+  role: string;
+  status: "pending" | "running" | "completed" | "failed" | "observed";
+  route?: string;
+  model?: string;
+  tools?: string[];
+  permissions?: string[];
+};
+```
+
+Later desktop UI can replace this projection with a persisted canvas document, but the event log remains the audit source.

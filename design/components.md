@@ -1,33 +1,85 @@
 # Agent Canvas Components
 
-日期：2026-06-29
+Date: 2026-06-30
 
-## Trace Observer
+## Current Surface
 
-第一版是只读观察器，不做拖拽编辑。
+The first UI integration is a local Agent Canvas workbench. It is not a landing page and not yet a drag-and-drop editor. It connects the existing runtime loop:
 
-布局：
+User Prompt -> Engine Selector -> Workflow/Group Definition -> Agent Runtime -> Event Log -> Trace/Artifact view.
 
-- 左侧：运行摘要、session、状态、成本、artifact 数量。
-- 中间：事件时间线，按执行顺序展示。
-- 右侧：选中事件详情、artifact 列表、patch 状态。
+## Visual Direction
 
-状态：
+- Structure follows `mockups/v3`: left navigation/config, a large coding workspace, tab-like view switching, and a right inspection rail.
+- Color and type borrow from `mockups/v1`: warm pale canvas background, slightly larger readable typography, quiet cream surfaces, and black primary actions.
+- UI density should feel like a coding tool: compact enough for repeated use, but not cramped.
 
-- empty：等待粘贴 `run:inspect --json` 输出。
-- valid：展示 trace、artifact、权限、backend session。
-- error：JSON 无法解析或缺少 events。
+## Components
 
-交互：
+### App Sidebar
 
-- 从本地 run API 加载运行列表。
-- 选择历史运行并加载 trace。
-- 粘贴 JSON。
-- 点击事件查看详情。
-- 按事件类型过滤。
+Purpose: task history and workspace-level navigation.
 
-约束：
+States:
+- default: shows New Task, Skills, Automation, recent local runs.
+- active: selected run uses a warm muted background and bold label.
+- empty: history list shows a short local-only empty state.
+- error: API failures appear in the task composer error area.
 
-- 不直接修改文件。
-- 不连接模型。
-- 本地 dev server 只读取 `.agent-canvas/runs/`，不执行模型、不写文件。
+### Task Composer
+
+Purpose: submit a local runtime task without needing CLI commands.
+
+Fields:
+- prompt textarea
+- engine selector: `fake` or `opencode`
+- workflow path input
+- multi-agent group path input
+- config path input
+- OpenCode permission toggles for edit, shell, network
+- timeout and max-node numeric inputs
+
+States:
+- default: fake engine, example config/group paths populated.
+- loading: Run button disabled and labelled as running.
+- error: failed POST response rendered above run metadata.
+- disabled: OpenCode-specific controls remain visible but explanatory through labels, not hidden.
+
+### Canvas Observer
+
+Purpose: show execution meaning, not decorative graph art.
+
+Each node card should map to a workflow node or strategy:
+- role/node id
+- current status
+- selected route/model when available
+- tool/permission hints
+- cost estimate when available
+
+Edges are static in v0.1 and derived from workflow/group defaults or observed event order.
+
+### Trace Timeline
+
+Purpose: chronological debug surface.
+
+Events show:
+- event type
+- status/decision badge
+- short summary
+- node id when present
+
+Filters:
+- all events
+- event type select
+- tab switch between Canvas and Trace
+
+### Inspector Rail
+
+Purpose: selected event JSON plus generated outputs.
+
+Sections:
+- selected event detail
+- artifacts and patch summaries
+- run stats
+
+Patch/artifact actions are not in this UI pass; lifecycle commands stay in CLI for now.

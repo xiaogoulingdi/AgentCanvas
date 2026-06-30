@@ -1,4 +1,4 @@
-import { createReadStream } from "node:fs";
+import { createReadStream, existsSync, statSync } from "node:fs";
 import { createServer } from "node:http";
 import { extname, join, resolve } from "node:path";
 import { JsonlEventLog } from "../../packages/events/src/jsonl-event-log.ts";
@@ -70,9 +70,13 @@ function serveStatic(pathname: string, response: Parameters<typeof sendJson>[0])
     sendJson(response, 403, { error: "Forbidden" });
     return;
   }
+  if (!existsSync(absolutePath) || !statSync(absolutePath).isFile()) {
+    sendJson(response, 404, { error: "Not found" });
+    return;
+  }
 
   const stream = createReadStream(absolutePath);
-  stream.on("error", () => sendJson(response, 404, { error: "Not found" }));
+  stream.on("error", () => response.destroy());
   response.writeHead(200, { "Content-Type": contentType(absolutePath) });
   stream.pipe(response);
 }
