@@ -2,7 +2,7 @@
 <html lang="en">
   <head>
     <meta charset="utf-8" />
-    <title>Agent Canvas Workbench Wireframe</title>
+    <title>Agent Canvas Code Chat Shell Wireframe</title>
     <link rel="stylesheet" href="./design-tokens.css" />
     <style>
       * { box-sizing: border-box; }
@@ -16,59 +16,42 @@
       }
       main {
         display: grid;
-        grid-template-columns: 260px minmax(560px, 1fr) 340px;
+        grid-template-columns: 260px minmax(520px, 1fr) 330px;
         min-height: 100vh;
       }
-      aside, section { min-width: 0; border-right: 1px solid var(--ac-border); }
-      .sidebar { background: var(--ac-chrome); padding: 16px; }
-      .workspace { background: var(--ac-surface); }
-      .topbar {
-        height: 56px;
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-        padding: 0 18px;
-        border-bottom: 1px solid var(--ac-border);
-      }
-      .content {
-        display: grid;
-        grid-template-columns: 360px 1fr;
-        gap: 18px;
-        padding: 18px;
-      }
-      .panel, .node, .composer {
-        border: 1px solid var(--ac-border);
-        border-radius: var(--ac-radius);
-        background: var(--ac-surface-strong);
-      }
-      .composer { min-height: 320px; }
-      .canvas {
-        min-height: 620px;
-        background-color: var(--ac-surface);
-        background-image: radial-gradient(var(--ac-bg-grid) 1px, transparent 1px);
-        background-size: 24px 24px;
-      }
-      .node { width: 220px; height: 112px; }
-      .rail { padding: 16px; background: var(--ac-surface); }
+      .sidebar { padding: 16px; background: var(--ac-chrome); border-right: 1px solid var(--ac-border); }
+      .chat { display: grid; grid-template-rows: 56px 1fr auto; background: var(--ac-surface); }
+      .topbar { display: flex; align-items: center; justify-content: space-between; padding: 0 18px; border-bottom: 1px solid var(--ac-border); }
+      .messages { display: grid; align-content: center; justify-items: center; padding: 32px; }
+      .composer { margin: 0 auto 24px; width: min(820px, calc(100% - 48px)); min-height: 130px; border: 1px solid var(--ac-border); border-radius: var(--ac-radius); background: var(--ac-surface-strong); }
+      .rail { padding: 16px; border-left: 1px solid var(--ac-border); background: var(--ac-surface); }
+      .agent-card { min-height: 96px; border: 1px solid var(--ac-border); border-radius: var(--ac-radius); background: var(--ac-surface-strong); margin-bottom: 10px; }
       @media (max-width: 1100px) {
-        main, .content { grid-template-columns: 1fr; }
+        main { grid-template-columns: 220px 1fr; }
+        .rail { grid-column: 1 / -1; border-left: 0; border-top: 1px solid var(--ac-border); }
+      }
+      @media (max-width: 820px) {
+        main { grid-template-columns: 1fr; }
+        .sidebar { border-right: 0; border-bottom: 1px solid var(--ac-border); }
       }
     </style>
   </head>
   <body>
     <main>
-      <aside class="sidebar">Runs and navigation</aside>
-      <section class="workspace">
-        <div class="topbar">
-          <strong>Agent Canvas Workbench</strong>
-          <button>Run</button>
-        </div>
-        <div class="content">
-          <div class="composer">Task composer and engine selector</div>
-          <div class="panel canvas">Canvas observer or trace timeline</div>
-        </div>
+      <aside class="sidebar">Navigation and recent runs</aside>
+      <section class="chat">
+        <header class="topbar">
+          <strong>Code with Agent Canvas</strong>
+          <button>Open Canvas</button>
+        </header>
+        <div class="messages">Conversation first, configuration second.</div>
+        <div class="composer">Prompt, model selector, Multi-Agent Group selector, Run button</div>
       </section>
-      <aside class="rail">Event detail and artifacts</aside>
+      <aside class="rail">
+        <div class="agent-card">Supervisor model slot</div>
+        <div class="agent-card">Coder model slot</div>
+        <div class="agent-card">Trace and artifacts</div>
+      </aside>
     </main>
   </body>
 </html>
