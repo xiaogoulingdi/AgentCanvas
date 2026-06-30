@@ -8,7 +8,7 @@ import { renderTraceText } from "../../../packages/trace/src/render-text.ts";
 import { renderTraceJson } from "../../../packages/trace/src/render-json.ts";
 import type { ExecutionEngine } from "../../../packages/engines/src/types.ts";
 import { createCliEventLog, printSessionFooter } from "./run-log.ts";
-import { loadCliConfig, opencodeModelFromConfig, readArg } from "./config.ts";
+import { loadCliConfig, opencodeModelFromConfig, permissionBrokerFromConfig, readArg } from "./config.ts";
 
 const workflowPath = readArg("--workflow") ?? "examples/workflows/research-code.json";
 const prompt = readArg("--prompt");
@@ -22,6 +22,7 @@ const json = process.argv.includes("--json");
 const allowEdits = process.argv.includes("--allow-opencode-edits");
 const allowShell = process.argv.includes("--allow-opencode-shell");
 const allowNetwork = process.argv.includes("--allow-opencode-network");
+const configPermissionBroker = permissionBrokerFromConfig(cliConfig);
 
 if (!prompt) {
   console.error(
@@ -54,7 +55,8 @@ try {
       allowShell,
       allowNetwork,
       maxNodes,
-      promptTimeoutMs: timeoutMs
+      promptTimeoutMs: timeoutMs,
+      ...(configPermissionBroker ? { permissionBroker: configPermissionBroker } : {})
     }),
     eventLog
   });

@@ -13,7 +13,7 @@ import { renderTraceText } from "../../../packages/trace/src/render-text.ts";
 import { renderTraceJson } from "../../../packages/trace/src/render-json.ts";
 import type { ExecutionEngine } from "../../../packages/engines/src/types.ts";
 import { createCliEventLog, printSessionFooter } from "./run-log.ts";
-import { engineRoutesFromConfig, loadCliConfig, providerProfilesFromConfig, readArg } from "./config.ts";
+import { engineRoutesFromConfig, loadCliConfig, permissionBrokerFromConfig, providerProfilesFromConfig, readArg } from "./config.ts";
 
 const workflowPath = readArg("--workflow") ?? "examples/workflows/research-code.json";
 const enginePath = readArg("--engine") ?? "examples/engines/deepseek-kimi-balanced.json";
@@ -33,6 +33,7 @@ const workflow = JSON.parse(await readFile(workflowPath, "utf8")) as WorkflowDef
 const cliConfig = await loadCliConfig();
 const engineConfig = cliConfig ? engineRoutesFromConfig(cliConfig) : (JSON.parse(await readFile(enginePath, "utf8")) as EngineRouteConfig);
 const providerRegistry = providerProfilesFromConfig(cliConfig);
+const configPermissionBroker = permissionBrokerFromConfig(cliConfig);
 const preflight = preflightEngineRoutes(engineConfig, providerRegistry);
 if (!preflight.ok) {
   console.error("Model route preflight failed:");
@@ -46,7 +47,7 @@ const backend = new ModelBackedBackendAdapter(router, {
   ...(workspaceTools
     ? {
         toolBroker: new WorkspaceToolBroker({ workspaceRoot: process.cwd(), allowWrites: allowFileEdits }),
-        permissionBroker: allowFileEdits ? createWorkspaceWritePermissionBroker() : createReadOnlyPermissionBroker()
+        permissionBroker: allowFileEdits ? createWorkspaceWritePermissionBroker() : configPermissionBroker ?? createReadOnlyPermissionBroker()
       }
     : {})
 });

@@ -1,4 +1,5 @@
 import type { PermissionDecision } from "../../permissions/src/types.ts";
+import { StaticPermissionBroker, type StaticPermissionPolicy } from "../../permissions/src/static-permission-broker.ts";
 import type { EngineRouteConfig, RouteTarget } from "../../models/src/model-router.ts";
 import type { ProviderProfile } from "../../models/src/types.ts";
 
@@ -73,4 +74,12 @@ export function configToProviderProfiles(config: AgentCanvasConfig): Record<stri
       ];
     })
   );
+}
+
+export function configToPermissionBroker(config: AgentCanvasConfig): StaticPermissionBroker {
+  return new StaticPermissionBroker({
+    source: "agentcanvas-config-policy",
+    defaultDecision: "deny",
+    policy: (config.tools ?? {}) as StaticPermissionPolicy
+  });
 }

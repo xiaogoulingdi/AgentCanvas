@@ -19,7 +19,7 @@ import { WorkspaceToolBroker } from "../../../packages/tools/src/workspace-tool-
 import type { ExecutionEngine } from "../../../packages/engines/src/types.ts";
 import type { AgentBackend } from "../../../packages/backends/src/types.ts";
 import { createCliEventLog } from "./run-log.ts";
-import { engineRoutesFromConfig, loadCliConfig, opencodeModelFromConfig, providerProfilesFromConfig, readArg } from "./config.ts";
+import { engineRoutesFromConfig, loadCliConfig, opencodeModelFromConfig, permissionBrokerFromConfig, providerProfilesFromConfig, readArg } from "./config.ts";
 
 type EngineOption =
   | {
@@ -85,6 +85,7 @@ const opencodeMaxNodes = Number(readArg("--opencode-max-nodes") ?? "1");
 const cliConfig = await loadCliConfig();
 const configuredOpenCodeModel = opencodeModelFromConfig(cliConfig);
 const providerRegistry = providerProfilesFromConfig(cliConfig);
+const configPermissionBroker = permissionBrokerFromConfig(cliConfig);
 
 const promptSession = createPromptSession();
 console.log("Agent Canvas CLI");
@@ -196,7 +197,8 @@ async function createRunContext(
         allowShell: allowOpenCodeShell,
         allowNetwork: allowOpenCodeNetwork,
         maxNodes: opencodeMaxNodes,
-        promptTimeoutMs: opencodeTimeoutMs
+        promptTimeoutMs: opencodeTimeoutMs,
+        ...(configPermissionBroker ? { permissionBroker: configPermissionBroker } : {})
       }),
       engine: {
         id: selectedEngine.id,
@@ -227,7 +229,7 @@ function createBrokerOptions() {
   if (!workspaceTools) return {};
   return {
     toolBroker: new WorkspaceToolBroker({ workspaceRoot: process.cwd(), allowWrites: allowFileEdits }),
-    permissionBroker: allowFileEdits ? createWorkspaceWritePermissionBroker() : createReadOnlyPermissionBroker()
+    permissionBroker: allowFileEdits ? createWorkspaceWritePermissionBroker() : configPermissionBroker ?? createReadOnlyPermissionBroker()
   };
 }
 

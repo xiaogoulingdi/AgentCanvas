@@ -8,10 +8,10 @@ export class StaticPermissionBroker implements PermissionBroker {
   private readonly defaultDecision: PermissionDecision;
   private readonly source: string;
 
-  constructor(input: { policy?: StaticPermissionPolicy; defaultDecision?: PermissionDecision } = {}) {
+  constructor(input: { policy?: StaticPermissionPolicy; defaultDecision?: PermissionDecision; source?: string } = {}) {
     this.policy = input.policy ?? {};
     this.defaultDecision = input.defaultDecision ?? "deny";
-    this.source = "static-policy";
+    this.source = input.source ?? "static-policy";
   }
 
   async check(request: PermissionRequest): Promise<PermissionDecision> {
