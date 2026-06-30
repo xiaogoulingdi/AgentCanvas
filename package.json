@@ -11,6 +11,7 @@
     "run:opencode": "node --experimental-strip-types apps/cli/src/run-opencode.ts",
     "run:list": "node --experimental-strip-types apps/cli/src/run-list.ts",
     "run:inspect": "node --experimental-strip-types apps/cli/src/run-inspect.ts",
+    "trace:serve": "node --experimental-strip-types apps/trace-observer/server.ts",
     "patch:list": "node --experimental-strip-types apps/cli/src/patch-list.ts",
     "patch:apply": "node --experimental-strip-types apps/cli/src/patch-apply.ts",
     "patch:reject": "node --experimental-strip-types apps/cli/src/patch-reject.ts",

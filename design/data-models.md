@@ -32,8 +32,19 @@ type TraceInspectJson = {
 
 ## 后续 UI 数据来源
 
-第一版用粘贴 JSON；后续可以改为：
+当前支持：
 
-- 本地 dev server 读取 `.agent-canvas/runs/`。
+- 本地 dev server 读取 `.agent-canvas/runs/`：
+
+```text
+GET /api/runs
+GET /api/runs/latest
+GET /api/runs/:sessionId
+```
+
+仍保留粘贴 JSON 作为 fallback。
+
+后续可以改为：
+
 - 桌面端主进程通过安全 IPC 暴露 run store。
 - Canvas trace panel 订阅 runtime event stream。

@@ -60,7 +60,7 @@
 
       textarea {
         width: 100%;
-        min-height: 220px;
+        min-height: 180px;
         resize: vertical;
         padding: 10px;
         border: 1px solid var(--border);
@@ -77,6 +77,11 @@
         gap: 8px;
         align-items: center;
         margin: 10px 0 14px;
+      }
+
+      .stack {
+        display: grid;
+        gap: 8px;
       }
 
       button, select {
@@ -231,10 +236,19 @@
     <main class="app">
       <aside class="panel">
         <h1 class="title">Trace Observer</h1>
-        <p class="subtle">Paste JSON from <code>npm.cmd run run:inspect -- --latest --json</code>.</p>
+        <p class="subtle">Load local runs from <code>npm.cmd run trace:serve</code>, or paste JSON from <code>run:inspect --json</code>.</p>
+        <div class="stack">
+          <select id="runSelect" aria-label="Run list">
+            <option value="">No runs loaded</option>
+          </select>
+          <div class="toolbar">
+            <button class="primary" id="refreshButton">Refresh</button>
+            <button id="loadRunButton">Load Run</button>
+          </div>
+        </div>
         <textarea id="jsonInput" spellcheck="false" aria-label="Trace JSON input"></textarea>
         <div class="toolbar">
-          <button class="primary" id="loadButton">Load</button>
+          <button id="loadButton">Load JSON</button>
           <button id="sampleButton">Sample</button>
         </div>
         <div class="error" id="errorBox"></div>
@@ -295,6 +309,8 @@
       };
 
       document.getElementById("loadButton").addEventListener("click", () => loadTrace(document.getElementById("jsonInput").value));
+      document.getElementById("refreshButton").addEventListener("click", refreshRuns);
+      document.getElementById("loadRunButton").addEventListener("click", loadSelectedRun);
       document.getElementById("sampleButton").addEventListener("click", () => {
         document.getElementById("jsonInput").value = JSON.stringify(sampleTrace, null, 2);
         loadTrace(document.getElementById("jsonInput").value);
@@ -303,22 +319,65 @@
         state.filter = event.target.value;
         render();
       });
+      refreshRuns();
+
+      async function refreshRuns() {
+        try {
+          const response = await fetch("/api/runs?limit=50", { cache: "no-store" });
+          if (!response.ok) throw new Error(`Run API unavailable (${response.status}). Start with: npm.cmd run trace:serve`);
+          const payload = await response.json();
+          const runs = Array.isArray(payload.runs) ? payload.runs : [];
+          const select = document.getElementById("runSelect");
+          select.innerHTML = runs.length === 0
+            ? '<option value="">No runs found</option>'
+            : runs.map((run) => `<option value="${escapeHtml(run.sessionId)}">${escapeHtml(run.updatedAt)} · ${escapeHtml(run.engineId ?? "unknown")} · ${escapeHtml(run.workflowName ?? run.workflowId ?? "unknown")}</option>`).join("");
+          if (runs[0]) await loadRun(runs[0].sessionId);
+        } catch (error) {
+          showError(error instanceof Error ? error.message : String(error));
+        }
+      }
+
+      async function loadSelectedRun() {
+        const sessionId = document.getElementById("runSelect").value;
+        if (!sessionId) return;
+        await loadRun(sessionId);
+      }
+
+      async function loadRun(sessionId) {
+        try {
+          const response = await fetch(`/api/runs/${encodeURIComponent(sessionId)}`, { cache: "no-store" });
+          if (!response.ok) throw new Error(`Run ${sessionId} unavailable (${response.status}).`);
+          const trace = await response.json();
+          document.getElementById("jsonInput").value = JSON.stringify(trace, null, 2);
+          applyTrace(trace);
+        } catch (error) {
+          showError(error instanceof Error ? error.message : String(error));
+        }
+      }
 
       function loadTrace(raw) {
         try {
           const parsed = JSON.parse(raw);
-          if (!Array.isArray(parsed.events)) throw new Error("Trace JSON must include an events array.");
-          state.trace = parsed;
-          state.selectedEventId = parsed.events[0]?.id ?? null;
-          state.filter = "all";
-          document.getElementById("errorBox").style.display = "none";
-          renderFilters();
-          render();
+          applyTrace(parsed);
         } catch (error) {
-          const box = document.getElementById("errorBox");
-          box.textContent = error instanceof Error ? error.message : String(error);
-          box.style.display = "block";
+          showError(error instanceof Error ? error.message : String(error));
         }
+      }
+
+      function applyTrace(parsed) {
+        if (!Array.isArray(parsed.events)) throw new Error("Trace JSON must include an events array.");
+        state.trace = parsed;
+        state.selectedEventId = parsed.events[0]?.id ?? null;
+        state.filter = "all";
+        document.getElementById("errorBox").style.display = "none";
+        renderFilters();
+        render();
+      }
+
+      function showError(message) {
+        const box = document.getElementById("errorBox");
+        box.textContent = message;
+        box.style.display = "block";
       }
 
       function renderFilters() {
