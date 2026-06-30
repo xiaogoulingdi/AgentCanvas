@@ -124,6 +124,12 @@ http://127.0.0.1:4317
 - 右侧展示事件详情和 artifact。
 - 可以直接看权限、OpenCode session、patch artifact。
 
+也可以通过 API 发起一次 fake run：
+
+```powershell
+Invoke-RestMethod -Method Post -Uri "http://127.0.0.1:4317/api/runs" -ContentType "application/json" -Body '{"prompt":"Demo from local API","engine":"fake","workflow":"examples/workflows/research-code.json"}'
+```
+
 如果不启动 server，也可以直接打开静态文件：
 
 ```text

@@ -3,6 +3,7 @@ import { createServer } from "node:http";
 import { extname, join, resolve } from "node:path";
 import { JsonlEventLog } from "../../packages/events/src/jsonl-event-log.ts";
 import { renderTraceJson } from "../../packages/trace/src/render-json.ts";
+import { createRun } from "./run-api.ts";
 
 const port = Number(readArg("--port") ?? process.env.AGENT_CANVAS_TRACE_PORT ?? "4317");
 const host = readArg("--host") ?? "127.0.0.1";
@@ -12,6 +13,12 @@ const eventLog = new JsonlEventLog();
 const server = createServer(async (request, response) => {
   try {
     const url = new URL(request.url ?? "/", `http://${request.headers.host ?? `${host}:${port}`}`);
+    if (request.method === "POST" && url.pathname === "/api/runs") {
+      const body = JSON.parse(await readBody(request)) as unknown;
+      sendJson(response, 201, await createRun(body as Parameters<typeof createRun>[0]));
+      return;
+    }
+
     if (request.method !== "GET") {
       sendJson(response, 405, { error: "Method not allowed" });
       return;
@@ -76,6 +83,14 @@ function sendJson(response: import("node:http").ServerResponse, status: number, 
     "Cache-Control": "no-store"
   });
   response.end(JSON.stringify(payload, null, 2));
+}
+
+async function readBody(request: import("node:http").IncomingMessage): Promise<string> {
+  const chunks: Buffer[] = [];
+  for await (const chunk of request) {
+    chunks.push(Buffer.isBuffer(chunk) ? chunk : Buffer.from(chunk));
+  }
+  return Buffer.concat(chunks).toString("utf8");
 }
 
 function contentType(path: string): string {
