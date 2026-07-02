@@ -3,6 +3,7 @@ import { createServer } from "node:http";
 import { extname, join, resolve } from "node:path";
 import { JsonlEventLog } from "../../packages/events/src/jsonl-event-log.ts";
 import { renderTraceJson } from "../../packages/trace/src/render-json.ts";
+import { listBuiltInAgentPacks } from "../../packages/packs/src/built-in-packs.ts";
 import { createRun } from "./run-api.ts";
 
 const port = Number(readArg("--port") ?? process.env.AGENT_CANVAS_TRACE_PORT ?? "4317");
@@ -27,6 +28,32 @@ const server = createServer(async (request, response) => {
     if (url.pathname === "/api/runs") {
       const limit = Number(url.searchParams.get("limit") ?? "50");
       sendJson(response, 200, { runs: (await eventLog.listRuns()).slice(0, limit) });
+      return;
+    }
+
+    if (url.pathname === "/api/packs") {
+      sendJson(response, 200, {
+        packs: listBuiltInAgentPacks().map((pack) => ({
+          id: pack.id,
+          name: pack.name,
+          tagline: pack.tagline,
+          description: pack.description,
+          strategies: Object.fromEntries(
+            Object.entries(pack.group.strategies).map(([strategyId, strategy]) => [
+              strategyId,
+              {
+                role: strategy.role,
+                intent: strategy.intent,
+                provider: strategy.model.provider,
+                model: strategy.model.model,
+                reason: strategy.model.reason,
+                tools: strategy.tools ?? [],
+                permissions: strategy.permissions ?? []
+              }
+            ])
+          )
+        }))
+      });
       return;
     }
 

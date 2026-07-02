@@ -10,13 +10,14 @@ The older workbench pattern remains useful as a debugging mental model, but it s
 
 Runtime loop:
 
-User Prompt -> Engine/Agent Group Selector -> Local Run API -> Event Log -> Chat Summary -> Optional Plan/Canvas/Trace/Artifact panel.
+User Prompt -> Agent Pack Selector -> Local Run API -> Event Log -> Chat Summary -> Optional Plan/Canvas/Trace/Artifact panel.
 
 ## Visual Direction
 
 - Follow `mockups/v3` for shell layout: left navigation, top app bar, centered code-chat surface, bottom composer.
 - Borrow `mockups/v1` warmth: pale canvas background, cream surfaces, larger readable type, black primary actions.
 - Keep Agent Canvas visible as a product feature, but not as the first-screen dominant object.
+- First-version model selection uses fixed Agent Packs instead of free-form graph editing.
 - Canvas cards are configuration/observability slots, not decorative graph art.
 
 ## Components
@@ -54,16 +55,26 @@ Purpose: submit a task without exposing full workflow plumbing.
 Fields:
 - prompt textarea.
 - engine selector: `fake` or `opencode`.
-- strategy selector: Multi-Agent Group or Workflow.
-- selected group/workflow label.
+- Agent Pack selector:
+  - DeepSeek Solo
+  - DeepSeek + Kimi
+  - DeepSeek + Kimi + OpenAI
+- selected pack role summary.
 - Run button.
 
 Advanced fields move into a compact right-panel Runtime section:
-- group path.
-- workflow path.
 - config path.
 - OpenCode edit/shell/network permissions.
 - timeout and max-node settings.
+
+### Agent Packs
+
+Purpose: give users a simple, fixed model bundle before editable Canvas exists.
+
+Built-ins:
+- DeepSeek Solo: DeepSeek handles planning, coding, and review for low-cost tests.
+- DeepSeek + Kimi: DeepSeek sets rules and Kimi writes code.
+- DeepSeek + Kimi + OpenAI: DeepSeek sets rules, Kimi writes code, OpenAI reviews.
 
 ### Agent Group Panel
 

@@ -12,11 +12,13 @@ import { loadAgentCanvasConfig } from "../../packages/config/src/loader.ts";
 import { configToPermissionBroker } from "../../packages/config/src/types.ts";
 import { compileGroupToWorkflow } from "../../packages/groups/src/compiler.ts";
 import type { MultiAgentGroupDefinition } from "../../packages/groups/src/types.ts";
+import { getBuiltInAgentPackOrThrow } from "../../packages/packs/src/built-in-packs.ts";
 import { opencodeModelFromBinding } from "./run-config.ts";
 
 export type CreateRunRequest = {
   prompt: string;
   engine?: "fake" | "opencode";
+  pack?: string;
   workflow?: string;
   group?: string;
   config?: string;
@@ -32,15 +34,15 @@ export async function createRun(input: CreateRunRequest): Promise<unknown> {
   const eventLog = new JsonlEventLog();
   const sessionId = createId("session");
   const config = input.config ? await loadAgentCanvasConfig(input.config) : undefined;
-  const workflow = input.group ? await loadGroupWorkflow(input.group) : await loadWorkflow(input.workflow ?? "examples/workflows/research-code.json");
+  const workflow = await resolveWorkflow(input);
   const plan = compileWorkflow(workflow);
   const engineType = input.engine ?? "fake";
   const permissionBroker = config ? configToPermissionBroker(config) : undefined;
 
   const engine: ExecutionEngine = {
-    id: input.group ? workflow.id : engineType,
+    id: input.pack ?? (input.group ? workflow.id : engineType),
     type: "workflow",
-    workflowPath: input.group ?? input.workflow ?? "examples/workflows/research-code.json"
+    workflowPath: input.pack ? `built-in-pack:${input.pack}` : input.group ?? input.workflow ?? "examples/workflows/research-code.json"
   };
 
   await runWorkflow({
@@ -77,4 +79,10 @@ async function loadWorkflow(path: string): Promise<WorkflowDefinition> {
 async function loadGroupWorkflow(path: string): Promise<WorkflowDefinition> {
   const group = JSON.parse(await readFile(path, "utf8")) as MultiAgentGroupDefinition;
   return compileGroupToWorkflow(group);
+}
+
+async function resolveWorkflow(input: CreateRunRequest): Promise<WorkflowDefinition> {
+  if (input.pack) return compileGroupToWorkflow(getBuiltInAgentPackOrThrow(input.pack).group);
+  if (input.group) return loadGroupWorkflow(input.group);
+  return loadWorkflow(input.workflow ?? "examples/workflows/research-code.json");
 }

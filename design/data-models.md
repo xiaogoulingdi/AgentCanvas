@@ -16,6 +16,7 @@ Request:
 type CreateRunRequest = {
   prompt: string;
   engine?: "fake" | "opencode";
+  pack?: "deepseek-solo" | "deepseek-kimi" | "deepseek-kimi-openai";
   workflow?: string;
   group?: string;
   config?: string;
@@ -48,6 +49,37 @@ GET /api/runs/:sessionId
 ```
 
 The sidebar uses run summaries from `JsonlEventLog.listRuns()`.
+
+## Built-In Agent Packs
+
+```http
+GET /api/packs
+```
+
+Response:
+
+```ts
+type AgentPackSummary = {
+  id: "deepseek-solo" | "deepseek-kimi" | "deepseek-kimi-openai";
+  name: string;
+  tagline: string;
+  description: string;
+  strategies: Record<
+    string,
+    {
+      role: string;
+      intent: string;
+      provider: string;
+      model: string;
+      reason: string;
+      tools: string[];
+      permissions: string[];
+    }
+  >;
+};
+```
+
+The UI uses these packs as the first-version model selector. The runtime compiles the selected pack to a Multi-Agent Group workflow before execution.
 
 ## Key Events
 
