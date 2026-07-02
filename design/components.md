@@ -1,104 +1,110 @@
 # Agent Canvas Components
 
-Date: 2026-06-30
+Date: 2026-07-02
 
 ## Current Surface
 
-The first product-facing UI is a Code Chat Shell. It should feel closer to OpenCode/Codex than to an admin workbench: the user starts with a conversation, chooses an engine or Multi-Agent Group near the composer, and only opens Canvas/Trace details when needed.
+The first product-facing UI follows the uploaded four-page prototype:
 
-The older workbench pattern remains useful as a debugging mental model, but it should not be the default product entry.
+- Dialog initial state
+- Dialog result state
+- Dialog with details drawer
+- Agent Canvas configuration page
+
+The default product surface is the dialog, not the Canvas. Canvas and trace are secondary details.
 
 Runtime loop:
 
-User Prompt -> Agent Pack Selector -> Local Run API -> Event Log -> Chat Summary -> Optional Plan/Canvas/Trace/Artifact panel.
+User Prompt -> Agent Pack Selector -> Local Run API -> Event Log -> Chinese Result Summary -> Optional Details Drawer.
 
 ## Visual Direction
 
-- Follow `mockups/v3` for shell layout: left navigation, top app bar, centered code-chat surface, bottom composer.
-- Borrow `mockups/v1` warmth: pale canvas background, cream surfaces, larger readable type, black primary actions.
-- Keep Agent Canvas visible as a product feature, but not as the first-screen dominant object.
-- First-version model selection uses fixed Agent Packs instead of free-form graph editing.
-- Canvas cards are configuration/observability slots, not decorative graph art.
+- Minimal Chinese interface.
+- No fake navigation such as Skills or Automation.
+- The prompt input is always visible at the bottom of the viewport.
+- Agent Pack selection stays near the composer.
+- Model/runtime settings live behind a settings button.
+- Trace and Artifacts live in a right-side drawer opened from result cards.
 
 ## Components
 
-### App Sidebar
+### Header
 
-Purpose: workspace navigation and local run history.
+Purpose: show product name and current project path.
 
 States:
-- default: New Task, Skills, Automation, recent local runs.
-- active: selected run uses a warm muted background and bold label.
-- empty: shows a compact empty state.
-- loading: history can refresh while a run is executing.
+- default: `Agent Canvas / current project`.
+- detail open: unchanged; drawer is the visual state change.
+
+### Slim Rail
+
+Purpose: small utility rail only.
+
+Allowed actions:
+- refresh local runs.
+- open recent run list when implemented.
+
+Do not add fake product areas.
 
 ### Chat Surface
 
-Purpose: primary daily-use interface for coding tasks.
-
-Elements:
-- welcome title when no run is selected.
-- user/assistant message stream.
-- assistant messages summarize runtime status, cost, events, and artifact count.
-- compact action chips for common task types.
+Purpose: primary daily-use interface.
 
 States:
-- empty: centered title and composer.
-- loading: user message stays visible, assistant bubble shows running state.
-- completed: assistant bubble links the run to Plan/Canvas/Trace.
-- error: assistant bubble shows the local runtime error.
+- initial: centered "开始工作" block with 2-3 task chips.
+- running: user prompt plus a compact running status.
+- completed: user prompt plus concise Chinese result summary.
+- error: user prompt plus visible error message.
 
 ### Composer
 
-Purpose: submit a task without exposing full workflow plumbing.
+Purpose: always-available task entry.
+
+Elements:
+- Agent Pack selector.
+- settings button.
+- prompt input.
+- send button.
+
+The composer is fixed in the visible bottom row and must never require manual scrolling.
+
+### Model Settings
+
+Purpose: keep runtime options out of the main page.
 
 Fields:
-- prompt textarea.
-- engine selector: `fake` or `opencode`.
-- Agent Pack selector:
-  - DeepSeek Solo
-  - DeepSeek + Kimi
-  - DeepSeek + Kimi + OpenAI
-- selected pack role summary.
-- Run button.
-
-Advanced fields move into a compact right-panel Runtime section:
+- engine: fake/opencode.
 - config path.
 - OpenCode edit/shell/network permissions.
-- timeout and max-node settings.
+- timeout.
+- max OpenCode nodes.
 
-### Agent Packs
+States:
+- closed by default.
+- open as a small popover near the composer.
 
-Purpose: give users a simple, fixed model bundle before editable Canvas exists.
+### Result Card
 
-Built-ins:
-- DeepSeek Solo: DeepSeek handles planning, coding, and review for low-cost tests.
-- DeepSeek + Kimi: DeepSeek sets rules and Kimi writes code.
-- DeepSeek + Kimi + OpenAI: DeepSeek sets rules, Kimi writes code, OpenAI reviews.
+Purpose: summarize the run without exposing raw trace.
 
-### Agent Group Panel
+Content:
+- completion title.
+- short bullets based on events/artifacts.
+- status, event count, artifact count, cost.
+- "查看详情" button.
 
-Purpose: show user-configured strategy slots before and after execution.
+### Details Drawer
 
-Cards:
-- Supervisor
-- Researcher
-- Coder
-- Reviewer
-
-Each card shows:
-- model/provider label.
-- route intent.
-- tool scope.
-- permission scope.
-- current status after a run.
-
-### Detail Panel
+Purpose: secondary debugging and inspection.
 
 Tabs:
-- Plan: run summary, cost, event/artifact count.
-- Canvas: compact agent cards and relationships.
-- Trace: recent events and selected event JSON.
-- Artifacts: generated reports/patches.
+- Trace: readable execution steps.
+- Artifacts: generated artifacts and patch summaries.
 
-This panel is secondary. It supports understanding and debugging, but the chat remains the main surface.
+The drawer opens only after the user asks for details.
+
+### Agent Canvas Configuration
+
+Purpose: future secondary page for editing Agent Packs.
+
+This is not the default page in v0.1. It can be reached later from model settings.

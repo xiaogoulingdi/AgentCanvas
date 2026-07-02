@@ -1,424 +1,355 @@
 <!doctype html>
-<html lang="en">
+<html lang="zh-CN">
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>Agent Canvas</title>
     <style>
       :root {
-        --bg: #f4f0e7;
-        --chrome: #ece8df;
-        --surface: #fffdfa;
-        --surface-muted: #f7f3ea;
-        --surface-strong: #ffffff;
-        --border: #ded6c8;
-        --border-strong: #c9bdab;
-        --text: #171717;
-        --muted: #706b63;
-        --soft: #8f887d;
-        --accent: #111111;
-        --accent-soft: #eee8dc;
-        --success: #008f70;
-        --warning: #b66a00;
+        --bg: #faf9f6;
+        --rail: #f3f2ee;
+        --surface: #ffffff;
+        --surface-soft: #f8f7f3;
+        --border: #e4e0d8;
+        --border-strong: #cfc8bc;
+        --text: #151515;
+        --muted: #77746d;
+        --soft: #a09b91;
+        --accent: #161616;
+        --success: #2f9b6b;
         --danger: #b42318;
-        --code: #181715;
+        --warning: #a86409;
         --radius: 8px;
-        --radius-small: 6px;
-        --shadow-soft: 0 12px 32px rgb(41 35 25 / 8%);
+        --shadow: 0 16px 38px rgb(31 27 20 / 8%);
+        --mono: "SFMono-Regular", Consolas, "Liberation Mono", monospace;
       }
 
       * { box-sizing: border-box; }
 
-      body {
-        margin: 0;
-        min-height: 100vh;
-        background: var(--bg);
-        color: var(--text);
-        font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-        font-size: 15px;
+      html, body {
+        height: 100%;
       }
 
-      button, textarea, select, input {
+      body {
+        margin: 0;
+        background: var(--bg);
+        color: var(--text);
+        font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", "Microsoft YaHei", sans-serif;
+        font-size: 14px;
+        overflow: hidden;
+      }
+
+      button, input, select, textarea {
         font: inherit;
       }
 
-      button, select, input, textarea {
+      button, input, select {
+        min-height: 36px;
         border: 1px solid var(--border);
-        border-radius: var(--radius-small);
-        background: var(--surface-strong);
+        border-radius: var(--radius);
+        background: var(--surface);
         color: var(--text);
       }
 
       button {
-        min-height: 34px;
         padding: 0 12px;
         cursor: pointer;
       }
 
-      button:hover, select:hover, input:hover, textarea:hover {
+      button:hover, input:hover, select:hover {
         border-color: var(--border-strong);
       }
 
-      button:focus-visible, select:focus-visible, input:focus-visible, textarea:focus-visible {
-        outline: 2px solid #cbbcff;
+      button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-visible {
+        outline: 2px solid #d8d2c8;
         outline-offset: 2px;
       }
 
       button.primary {
+        min-width: 42px;
         border-color: var(--accent);
         background: var(--accent);
-        color: #ffffff;
+        color: #fff;
         font-weight: 750;
       }
 
       button.primary:disabled {
         cursor: wait;
-        opacity: 0.65;
+        opacity: 0.62;
+      }
+
+      button.icon {
+        display: grid;
+        width: 36px;
+        padding: 0;
+        place-items: center;
       }
 
       button.ghost {
+        border-color: transparent;
         background: transparent;
       }
 
-      input, select {
-        width: 100%;
-        min-height: 34px;
+      select {
         padding: 0 10px;
-      }
-
-      textarea {
-        width: 100%;
-        resize: vertical;
-        padding: 12px;
-        line-height: 1.5;
-      }
-
-      code, pre {
-        font-family: "SFMono-Regular", Consolas, "Liberation Mono", monospace;
       }
 
       .app {
         display: grid;
-        grid-template-columns: 252px minmax(560px, 1fr) 338px;
-        min-height: 100vh;
+        grid-template-columns: 48px 1fr;
+        grid-template-rows: 56px 1fr auto;
+        height: 100vh;
+        min-width: 0;
       }
 
-      .sidebar {
+      .topbar {
+        grid-column: 1 / -1;
         display: flex;
-        flex-direction: column;
-        min-width: 0;
-        padding: 16px 12px;
-        border-right: 1px solid var(--border);
-        background: var(--chrome);
+        align-items: center;
+        justify-content: space-between;
+        gap: 16px;
+        padding: 0 20px;
+        border-bottom: 1px solid var(--border);
+        background: var(--surface);
       }
 
       .brand {
         display: flex;
-        gap: 10px;
-        align-items: center;
-        margin: 2px 4px 18px;
-        font-weight: 800;
-      }
-
-      .brand-mark {
-        display: grid;
-        width: 30px;
-        height: 30px;
-        place-items: center;
-        border-radius: var(--radius-small);
-        background: var(--accent);
-        color: #ffffff;
-        font-weight: 800;
-      }
-
-      .nav {
-        display: grid;
-        gap: 4px;
-        margin-bottom: 26px;
-      }
-
-      .nav-item {
-        display: flex;
-        align-items: center;
+        align-items: baseline;
         gap: 8px;
-        min-height: 34px;
-        padding: 0 8px;
-        border-radius: var(--radius-small);
-      }
-
-      .nav-item.active {
-        background: var(--surface-strong);
-        font-weight: 750;
-      }
-
-      .sidebar-label {
-        margin: 0 8px 10px;
-        color: var(--muted);
-        font-size: 12px;
-        font-weight: 800;
-        letter-spacing: 0;
-        text-transform: uppercase;
-      }
-
-      .run-list {
-        display: grid;
-        gap: 5px;
-        min-height: 0;
-        overflow: auto;
-      }
-
-      .run-item {
-        display: grid;
-        width: 100%;
-        min-height: 48px;
-        padding: 7px 8px;
-        border: 0;
-        background: transparent;
-        text-align: left;
-      }
-
-      .run-item.active {
-        background: #ddd8ce;
-        font-weight: 750;
-      }
-
-      .run-item .meta {
-        color: var(--muted);
-        font-size: 12px;
-        font-weight: 500;
-        overflow: hidden;
-        text-overflow: ellipsis;
-        white-space: nowrap;
-      }
-
-      .sidebar-footer {
-        margin-top: auto;
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-        gap: 10px;
-        padding: 10px 4px 0;
-        color: var(--muted);
-        font-size: 12px;
-      }
-
-      .chat-shell {
-        display: grid;
-        grid-template-rows: auto 1fr auto;
-        min-width: 0;
-        min-height: 100vh;
-        background: var(--surface);
-      }
-
-      .topbar {
-        display: flex;
-        min-height: 58px;
-        align-items: center;
-        justify-content: space-between;
-        gap: 16px;
-        padding: 0 18px;
-        border-bottom: 1px solid var(--border);
-      }
-
-      .title-block {
         min-width: 0;
       }
 
-      .title {
-        margin: 0;
-        font-size: 20px;
-        line-height: 1.2;
+      .brand strong {
+        font-weight: 850;
       }
 
-      .subtitle {
-        margin-top: 4px;
-        color: var(--muted);
-        font-size: 13px;
-        overflow: hidden;
-        text-overflow: ellipsis;
-        white-space: nowrap;
-      }
-
-      .top-actions {
-        display: flex;
-        flex: 0 0 auto;
-        align-items: center;
-        gap: 8px;
-      }
-
-      .messages {
-        min-height: 0;
-        overflow: auto;
-        padding: 34px 28px 24px;
-      }
-
-      .welcome {
-        display: grid;
-        justify-items: center;
-        align-content: center;
-        min-height: 52vh;
-        text-align: center;
-      }
-
-      .welcome h1 {
-        margin: 0 0 12px;
-        font-size: 38px;
-        line-height: 1.1;
-      }
-
-      .welcome p {
-        max-width: 620px;
-        margin: 0;
-        color: var(--muted);
-        font-size: 16px;
-        line-height: 1.55;
-      }
-
-      .quick-actions {
-        display: flex;
-        flex-wrap: wrap;
-        justify-content: center;
-        gap: 10px;
-        margin-top: 28px;
-      }
-
-      .chip {
-        min-height: 38px;
-        border-radius: var(--radius);
-        background: var(--surface-strong);
-      }
-
-      .thread {
-        display: grid;
-        gap: 18px;
-        max-width: 840px;
-        margin: 0 auto;
-      }
-
-      .message {
-        display: grid;
-        gap: 8px;
-      }
-
-      .message.user {
-        justify-items: end;
-      }
-
-      .bubble {
-        max-width: min(720px, 100%);
-        padding: 14px 16px;
-        border: 1px solid var(--border);
-        border-radius: var(--radius);
-        background: var(--surface-strong);
-        line-height: 1.55;
-        box-shadow: var(--shadow-soft);
-      }
-
-      .message.user .bubble {
-        background: var(--accent);
-        color: #ffffff;
-      }
-
-      .bubble-title {
-        margin-bottom: 8px;
-        font-weight: 800;
-      }
-
-      .composer-wrap {
-        padding: 0 24px 22px;
-      }
-
-      .composer {
-        max-width: 860px;
-        margin: 0 auto;
-        border: 1px solid var(--border);
-        border-radius: var(--radius);
-        background: var(--surface-strong);
-        box-shadow: var(--shadow-soft);
-      }
-
-      .composer textarea {
-        min-height: 92px;
-        border: 0;
-        border-bottom: 1px solid var(--border);
-        border-radius: var(--radius) var(--radius) 0 0;
-        background: transparent;
-      }
-
-      .composer textarea:focus-visible {
-        outline-offset: -2px;
-      }
-
-      .composer-bar {
-        display: grid;
-        grid-template-columns: minmax(130px, 170px) minmax(150px, 210px) 1fr auto;
-        gap: 8px;
-        align-items: center;
-        padding: 10px;
-      }
-
-      .selected-path {
-        min-width: 0;
-        color: var(--muted);
-        font-size: 12px;
+      .project {
+        color: var(--soft);
         overflow: hidden;
         text-overflow: ellipsis;
         white-space: nowrap;
       }
 
       .rail {
-        min-width: 0;
-        padding: 16px;
-        border-left: 1px solid var(--border);
-        background: var(--surface);
-        overflow: auto;
-      }
-
-      .rail-section {
-        padding-bottom: 16px;
-        margin-bottom: 16px;
-        border-bottom: 1px solid var(--border);
-      }
-
-      .rail-section:last-child {
-        border-bottom: 0;
-      }
-
-      .rail h2 {
-        margin: 0 0 12px;
-        font-size: 16px;
-      }
-
-      .tabs {
+        grid-row: 2 / 4;
         display: flex;
-        gap: 2px;
-        padding: 3px;
+        flex-direction: column;
+        align-items: center;
+        gap: 10px;
+        padding-top: 14px;
+        border-right: 1px solid var(--border);
+        background: var(--rail);
+      }
+
+      .messages {
+        min-height: 0;
+        overflow: auto;
+        padding: 34px 32px 118px;
+      }
+
+      .welcome {
+        display: grid;
+        min-height: 100%;
+        align-content: center;
+        justify-items: center;
+        text-align: center;
+      }
+
+      .bot-mark {
+        display: grid;
+        width: 56px;
+        height: 56px;
+        margin-bottom: 24px;
+        place-items: center;
+        border-radius: 16px;
+        background: var(--surface-soft);
+        color: var(--text);
+        font-size: 24px;
+      }
+
+      .welcome h1 {
+        margin: 0 0 12px;
+        font-size: 30px;
+        line-height: 1.18;
+      }
+
+      .welcome p {
+        margin: 0;
+        color: var(--soft);
+        font-size: 15px;
+      }
+
+      .chips {
+        display: flex;
+        flex-wrap: wrap;
+        justify-content: center;
+        gap: 10px;
+        margin-top: 32px;
+      }
+
+      .chip {
+        min-height: 34px;
+        color: #4f4b45;
+      }
+
+      .thread {
+        display: grid;
+        gap: 20px;
+        max-width: 720px;
+        margin: 0 auto;
+      }
+
+      .user-line {
+        display: flex;
+        justify-content: flex-end;
+      }
+
+      .user-pill {
+        max-width: min(620px, 100%);
+        padding: 14px 18px;
+        border-radius: 18px;
+        background: var(--accent);
+        color: #fff;
+        font-weight: 750;
+        line-height: 1.45;
+      }
+
+      .status-pill {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        width: fit-content;
+        min-height: 34px;
+        padding: 0 14px;
+        border-radius: 999px;
+        background: var(--surface-soft);
+        color: var(--muted);
+      }
+
+      .status-dot {
+        width: 8px;
+        height: 8px;
+        border-radius: 999px;
+        background: var(--success);
+      }
+
+      .status-dot.running {
+        background: var(--warning);
+      }
+
+      .status-dot.failed {
+        background: var(--danger);
+      }
+
+      .result-card {
+        display: grid;
+        gap: 14px;
+        padding: 20px;
+        border: 1px solid var(--border);
+        border-radius: 14px;
+        background: var(--surface);
+        box-shadow: var(--shadow);
+      }
+
+      .result-card h2 {
+        margin: 0;
+        font-size: 17px;
+      }
+
+      .summary-list {
+        display: grid;
+        gap: 10px;
+        margin: 0;
+        padding: 0;
+        list-style: none;
+        color: #4f575f;
+      }
+
+      .summary-list li::before {
+        content: "✓";
+        margin-right: 10px;
+        color: var(--success);
+      }
+
+      .result-meta {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 12px;
+        color: var(--soft);
+        font-size: 13px;
+      }
+
+      .composer-shell {
+        grid-column: 2;
+        position: relative;
+        padding: 12px 24px 16px;
+        border-top: 1px solid var(--border);
+        background: rgb(250 249 246 / 94%);
+        backdrop-filter: blur(12px);
+      }
+
+      .composer {
+        display: grid;
+        grid-template-columns: 150px 42px minmax(180px, 1fr) 44px;
+        gap: 8px;
+        align-items: center;
+        width: min(768px, 100%);
+        margin: 0 auto;
+      }
+
+      .prompt-input {
+        min-height: 42px;
+        padding: 0 16px;
         border: 1px solid var(--border);
         border-radius: var(--radius);
-        background: var(--surface-muted);
+        background: var(--surface);
       }
 
-      .tab {
-        min-height: 30px;
-        border: 0;
-        background: transparent;
+      .settings-popover {
+        position: absolute;
+        right: max(24px, calc((100% - 768px) / 2));
+        bottom: 70px;
+        display: none;
+        width: min(380px, calc(100vw - 72px));
+        padding: 16px;
+        border: 1px solid var(--border);
+        border-radius: 14px;
+        background: var(--surface);
+        box-shadow: var(--shadow);
+        z-index: 20;
       }
 
-      .tab.active {
-        background: var(--surface-strong);
-        box-shadow: var(--shadow-soft);
+      .settings-popover.open {
+        display: block;
+      }
+
+      .settings-head {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        margin-bottom: 12px;
+      }
+
+      .settings-head h2, .drawer-head h2 {
+        margin: 0;
+        font-size: 16px;
       }
 
       .field {
         display: grid;
         gap: 6px;
-        margin-bottom: 10px;
+        margin-bottom: 12px;
       }
 
-      .field label, .check-row label {
+      .field label {
         color: var(--muted);
         font-size: 12px;
         font-weight: 750;
+      }
+
+      .field input, .field select {
+        width: 100%;
       }
 
       .field-row {
@@ -427,529 +358,394 @@
         gap: 10px;
       }
 
-      .check-grid {
+      .checks {
         display: grid;
-        grid-template-columns: repeat(3, minmax(0, 1fr));
+        grid-template-columns: repeat(3, 1fr);
         gap: 8px;
       }
 
-      .check-row {
+      .check {
         display: flex;
         align-items: center;
         gap: 7px;
         min-height: 34px;
-        padding: 0 9px;
-        border: 1px solid var(--border);
-        border-radius: var(--radius-small);
-        background: var(--surface-muted);
-      }
-
-      .check-row input {
-        width: 14px;
-        min-height: 14px;
-        padding: 0;
-      }
-
-      .panel-view {
-        display: none;
-      }
-
-      .panel-view.active {
-        display: block;
-      }
-
-      .agent-stack {
-        display: grid;
-        gap: 10px;
-      }
-
-      .agent-card {
-        display: grid;
-        gap: 8px;
-        padding: 12px;
+        padding: 0 10px;
         border: 1px solid var(--border);
         border-radius: var(--radius);
-        background: var(--surface-strong);
-      }
-
-      .agent-head {
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-        gap: 8px;
-        font-weight: 800;
-      }
-
-      .agent-row {
-        display: flex;
-        justify-content: space-between;
-        gap: 10px;
+        background: var(--surface-soft);
         color: var(--muted);
+        font-size: 12px;
+      }
+
+      .check input {
+        width: 14px;
+        height: 14px;
+      }
+
+      .hint {
+        color: var(--soft);
+        font-size: 12px;
+        line-height: 1.5;
+      }
+
+      .error {
+        display: none;
+        margin-top: 10px;
+        padding: 10px;
+        border: 1px solid #e9b1aa;
+        border-radius: var(--radius);
+        background: #fff0ee;
+        color: var(--danger);
         font-size: 13px;
       }
 
-      .agent-row span:last-child {
-        color: var(--text);
-        overflow: hidden;
-        text-align: right;
-        text-overflow: ellipsis;
-        white-space: nowrap;
+      .drawer {
+        position: fixed;
+        top: 56px;
+        right: 0;
+        bottom: 0;
+        z-index: 30;
+        display: none;
+        width: min(400px, calc(100vw - 48px));
+        border-left: 1px solid var(--border);
+        background: var(--surface);
+        box-shadow: -18px 0 32px rgb(31 27 20 / 8%);
       }
 
-      .badge {
-        display: inline-flex;
-        align-items: center;
-        max-width: 100%;
-        min-height: 22px;
-        padding: 2px 7px;
-        border-radius: var(--radius-small);
-        background: var(--accent-soft);
-        color: var(--muted);
-        font-size: 12px;
-        font-weight: 700;
-      }
-
-      .badge.completed, .badge.allow, .badge.observed {
-        background: #e5f6ef;
-        color: var(--success);
-      }
-
-      .badge.running, .badge.ask, .badge.unknown {
-        background: #fff2dc;
-        color: var(--warning);
-      }
-
-      .badge.failed, .badge.deny {
-        background: #ffe9e6;
-        color: var(--danger);
-      }
-
-      .metric-grid {
+      .drawer.open {
         display: grid;
-        grid-template-columns: 1fr 1fr;
-        gap: 8px;
+        grid-template-rows: auto auto 1fr;
       }
 
-      .metric {
-        min-width: 0;
-        padding: 9px;
-        border: 1px solid var(--border);
-        border-radius: var(--radius-small);
-        background: var(--surface-muted);
+      .drawer-head {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        min-height: 48px;
+        padding: 0 20px;
+        border-bottom: 1px solid var(--border);
       }
 
-      .metric span {
-        display: block;
+      .tabs {
+        display: flex;
+        gap: 18px;
+        padding: 0 20px;
+        border-bottom: 1px solid var(--border);
+      }
+
+      .tab {
+        min-height: 40px;
+        padding: 0;
+        border: 0;
+        border-bottom: 2px solid transparent;
+        border-radius: 0;
+        background: transparent;
         color: var(--muted);
-        font-size: 11px;
+      }
+
+      .tab.active {
+        border-bottom-color: var(--accent);
+        color: var(--text);
+      }
+
+      .drawer-body {
+        min-height: 0;
+        overflow: auto;
+        padding: 18px 20px;
+      }
+
+      .trace-list {
+        display: grid;
+        gap: 14px;
+      }
+
+      .trace-item {
+        display: grid;
+        grid-template-columns: 22px 1fr auto;
+        gap: 10px;
+        align-items: start;
+      }
+
+      .trace-check {
+        display: grid;
+        width: 20px;
+        height: 20px;
+        place-items: center;
+        border-radius: 999px;
+        background: var(--success);
+        color: #fff;
+        font-size: 12px;
+      }
+
+      .trace-title {
         font-weight: 750;
       }
 
-      .metric strong {
-        display: block;
+      .trace-copy {
         margin-top: 4px;
-        overflow: hidden;
-        text-overflow: ellipsis;
-        white-space: nowrap;
-      }
-
-      .timeline {
-        display: grid;
-        gap: 8px;
-        max-height: 360px;
-        overflow: auto;
-      }
-
-      .event {
-        width: 100%;
-        min-height: 58px;
-        padding: 9px 10px;
-        text-align: left;
-      }
-
-      .event.active {
-        border-color: var(--accent);
-        background: var(--accent-soft);
-      }
-
-      .event-head {
-        display: flex;
-        gap: 8px;
-        align-items: center;
-        justify-content: space-between;
-      }
-
-      .event-type {
-        min-width: 0;
-        overflow: hidden;
-        text-overflow: ellipsis;
-        white-space: nowrap;
-        font-weight: 800;
-      }
-
-      .event-copy, .hint {
         color: var(--muted);
-        font-size: 12px;
-        line-height: 1.4;
-        overflow-wrap: anywhere;
+        font-size: 13px;
+        line-height: 1.45;
       }
 
-      pre {
-        max-height: 260px;
-        overflow: auto;
-        margin: 0;
-        padding: 12px;
-        border-radius: var(--radius-small);
-        background: var(--code);
-        color: #fffaf1;
+      .trace-time {
+        color: var(--soft);
         font-size: 12px;
-        line-height: 1.45;
       }
 
       .artifact {
         display: grid;
         gap: 6px;
-        padding: 10px 0;
+        padding: 12px 0;
         border-bottom: 1px solid var(--border);
       }
 
-      .artifact:last-child {
-        border-bottom: 0;
-      }
-
-      .artifact-title {
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-        gap: 8px;
-        font-weight: 800;
+      .artifact strong {
+        font-size: 14px;
       }
 
       .empty {
         display: grid;
         min-height: 96px;
         place-items: center;
-        padding: 16px;
         border: 1px dashed var(--border);
         border-radius: var(--radius);
-        background: var(--surface-muted);
+        background: var(--surface-soft);
         color: var(--soft);
         text-align: center;
       }
 
-      .error {
-        display: none;
-        padding: 10px;
-        border: 1px solid #e9b1aa;
-        border-radius: var(--radius-small);
-        background: #fff0ee;
-        color: var(--danger);
-        font-size: 13px;
-      }
-
-      @media (max-width: 1180px) {
+      @media (max-width: 760px) {
         .app {
-          grid-template-columns: 220px minmax(0, 1fr);
+          grid-template-columns: 1fr;
         }
         .rail {
+          display: none;
+        }
+        .composer-shell {
+          grid-column: 1;
+          padding-inline: 12px;
+        }
+        .composer {
+          grid-template-columns: 1fr 42px;
+        }
+        .pack-select {
           grid-column: 1 / -1;
-          border-left: 0;
-          border-top: 1px solid var(--border);
         }
-      }
-
-      @media (max-width: 880px) {
-        .app {
-          grid-template-columns: 1fr;
+        .prompt-input {
+          grid-column: 1;
         }
-        .sidebar {
-          min-height: auto;
-          border-right: 0;
-          border-bottom: 1px solid var(--border);
-        }
-        .topbar {
-          align-items: flex-start;
-          flex-direction: column;
-          padding: 14px;
-        }
-        .top-actions {
-          flex-wrap: wrap;
-        }
-        .composer-bar,
-        .field-row,
-        .check-grid,
-        .metric-grid {
-          grid-template-columns: 1fr;
+        .settings-popover {
+          right: 12px;
+          bottom: 118px;
+          width: calc(100vw - 24px);
         }
       }
     </style>
   </head>
   <body>
     <main class="app">
-      <aside class="sidebar">
+      <header class="topbar">
         <div class="brand">
-          <div class="brand-mark">A</div>
-          <div>Agent Canvas</div>
+          <strong>Agent Canvas</strong>
+          <span>/</span>
+          <span class="project">my-project</span>
         </div>
-        <nav class="nav" aria-label="Workspace">
-          <div class="nav-item active">+ New Task</div>
-          <div class="nav-item">[] Skills</div>
-          <div class="nav-item">o Automation</div>
-        </nav>
-        <div class="sidebar-label">Recent Runs</div>
-        <div class="run-list" id="runList">
-          <div class="empty">No runs loaded.</div>
-        </div>
-        <div class="sidebar-footer">
-          <span>Local runtime</span>
-          <button class="ghost" id="refreshButton">Refresh</button>
-        </div>
+        <button class="ghost icon" id="themeButton" type="button" title="外观">☼</button>
+      </header>
+
+      <aside class="rail" aria-label="工具">
+        <button class="ghost icon" id="refreshButton" type="button" title="刷新运行">↻</button>
       </aside>
 
-      <section class="chat-shell">
-        <header class="topbar">
-          <div class="title-block">
-            <h1 class="title">Code with Agent Canvas</h1>
-            <div class="subtitle" id="runSubtitle">Start with a prompt, then inspect the selected agent group when you need detail.</div>
+      <section class="messages" id="messages" aria-live="polite"></section>
+
+      <section class="composer-shell">
+        <form class="composer" id="runForm">
+          <select class="pack-select" id="packInput" aria-label="Agent Pack">
+            <option value="deepseek-solo">DeepSeek Solo</option>
+            <option value="deepseek-kimi" selected>DeepSeek + Kimi</option>
+            <option value="deepseek-kimi-openai">DeepSeek + Kimi + OpenAI</option>
+          </select>
+          <button class="icon" id="settingsButton" type="button" title="模型设置">☷</button>
+          <input class="prompt-input" id="promptInput" autocomplete="off" placeholder="输入任务开始..." />
+          <button class="primary icon" id="runButton" type="submit" title="运行">→</button>
+        </form>
+
+        <div class="settings-popover" id="settingsPanel">
+          <div class="settings-head">
+            <h2>模型设置</h2>
+            <button class="ghost icon" id="closeSettingsButton" type="button" title="关闭">×</button>
           </div>
-          <div class="top-actions">
-            <button class="ghost" data-rail-tab="canvas">Open Canvas</button>
-            <button class="ghost" data-rail-tab="trace">Trace</button>
-          </div>
-        </header>
-
-        <div class="messages" id="messages">
-          <div class="welcome">
-            <h1>Code with Agent Canvas</h1>
-            <p>Ask for a coding task, choose an Agent Pack, and keep the model routing visible only when it helps.</p>
-            <div class="quick-actions">
-              <button class="chip" data-prompt="Inspect this project and suggest the safest next coding step.">Inspect project</button>
-              <button class="chip" data-prompt="Create a small plan for improving the Agent Canvas UI.">Plan UI work</button>
-              <button class="chip" data-prompt="Run a fake multi-agent coding workflow and summarize the trace.">Test agent group</button>
-            </div>
-          </div>
-        </div>
-
-        <div class="composer-wrap">
-          <form class="composer" id="runForm">
-            <textarea id="promptInput" spellcheck="false" placeholder="Ask Agent Canvas to write code, inspect a page, or run a configured multi-agent workflow."></textarea>
-            <div class="composer-bar">
-              <select id="engineInput" aria-label="Engine">
-                <option value="fake">Fake runtime</option>
-                <option value="opencode">OpenCode backend</option>
-              </select>
-              <select id="packInput" aria-label="Agent Pack">
-                <option value="deepseek-solo">DeepSeek Solo</option>
-                <option value="deepseek-kimi" selected>DeepSeek + Kimi</option>
-                <option value="deepseek-kimi-openai">DeepSeek + Kimi + OpenAI</option>
-              </select>
-              <div class="selected-path" id="selectedPath">Rules by DeepSeek, code by Kimi</div>
-              <button class="primary" id="runButton" type="submit">Run</button>
-            </div>
-          </form>
-        </div>
-      </section>
-
-      <aside class="rail">
-        <section class="rail-section">
-          <h2>Agent Group</h2>
-          <div class="agent-stack" id="agentStack"></div>
-        </section>
-
-        <section class="rail-section">
-          <div class="tabs" role="tablist" aria-label="Run details">
-            <button class="tab active" data-rail-tab="plan">Plan</button>
-            <button class="tab" data-rail-tab="canvas">Canvas</button>
-            <button class="tab" data-rail-tab="trace">Trace</button>
-            <button class="tab" data-rail-tab="artifacts">Artifacts</button>
-          </div>
-        </section>
-
-        <section class="rail-section panel-view active" id="planPanel">
-          <h2>Run</h2>
-          <div id="runDetail"><div class="empty">No run selected.</div></div>
-        </section>
-
-        <section class="rail-section panel-view" id="canvasPanel">
-          <h2>Canvas</h2>
-          <div id="canvasDetail"><div class="empty">Run a task to observe agent slots.</div></div>
-        </section>
-
-        <section class="rail-section panel-view" id="tracePanel">
-          <h2>Trace</h2>
           <div class="field">
-            <label for="typeFilter">Filter</label>
-            <select id="typeFilter" aria-label="Filter events">
-              <option value="all">All events</option>
+            <label for="engineInput">运行引擎</label>
+            <select id="engineInput">
+              <option value="fake">Fake Runtime（本地测试）</option>
+              <option value="opencode">OpenCode Backend</option>
             </select>
           </div>
-          <div class="timeline" id="timeline"><div class="empty">No trace loaded.</div></div>
-          <div style="height: 12px;"></div>
-          <div id="eventDetail"><div class="empty">Select an event.</div></div>
-        </section>
-
-        <section class="rail-section panel-view" id="artifactsPanel">
-          <h2>Artifacts</h2>
-          <div id="artifactList"><div class="empty">No artifacts.</div></div>
-        </section>
-
-        <section class="rail-section">
-          <h2>Runtime Settings</h2>
           <div class="field">
-            <label>Selected Pack</label>
-            <div class="empty" id="packDescription" style="min-height: 74px;">DeepSeek sets rules and Kimi writes code.</div>
+            <label>当前策略组</label>
+            <div class="hint" id="packDescription">DeepSeek 负责规则制定，Kimi 负责代码编写。</div>
           </div>
           <div class="field">
-            <label for="configInput">Config path</label>
+            <label for="configInput">配置文件</label>
             <input id="configInput" value="agentcanvas.config.example.json" />
           </div>
           <div class="field-row">
             <div class="field">
-              <label for="timeoutInput">Timeout ms</label>
+              <label for="timeoutInput">超时</label>
               <input id="timeoutInput" type="number" min="1000" step="1000" value="90000" />
             </div>
             <div class="field">
-              <label for="maxNodesInput">Max nodes</label>
+              <label for="maxNodesInput">OpenCode 节点</label>
               <input id="maxNodesInput" type="number" min="1" step="1" value="1" />
             </div>
           </div>
           <div class="field">
-            <label>OpenCode permissions</label>
-            <div class="check-grid">
-              <div class="check-row"><input id="allowEditsInput" type="checkbox" /><label for="allowEditsInput">Edit</label></div>
-              <div class="check-row"><input id="allowShellInput" type="checkbox" /><label for="allowShellInput">Shell</label></div>
-              <div class="check-row"><input id="allowNetworkInput" type="checkbox" /><label for="allowNetworkInput">Network</label></div>
+            <label>OpenCode 权限</label>
+            <div class="checks">
+              <label class="check"><input id="allowEditsInput" type="checkbox" />编辑</label>
+              <label class="check"><input id="allowShellInput" type="checkbox" />终端</label>
+              <label class="check"><input id="allowNetworkInput" type="checkbox" />网络</label>
             </div>
           </div>
           <div class="error" id="errorBox"></div>
-        </section>
+        </div>
+      </section>
+
+      <aside class="drawer" id="detailDrawer" aria-label="运行详情">
+        <div class="drawer-head">
+          <h2>运行详情</h2>
+          <button class="ghost icon" id="closeDrawerButton" type="button" title="关闭">×</button>
+        </div>
+        <div class="tabs" role="tablist" aria-label="详情">
+          <button class="tab active" data-detail-tab="trace" type="button">Trace</button>
+          <button class="tab" data-detail-tab="artifacts" type="button">Artifacts</button>
+        </div>
+        <div class="drawer-body" id="drawerBody"></div>
       </aside>
     </main>
 
     <script>
       const state = {
+        packs: [],
         trace: null,
         runs: [],
-        packs: [],
-        selectedRunId: null,
-        selectedEventId: null,
-        filter: "all",
-        railTab: "plan",
         loading: false,
-        lastPrompt: ""
-      };
-
-      const sampleTrace = {
-        sessionId: "session_sample",
-        status: "completed",
-        estimatedUsd: 0.08,
-        artifacts: [{ id: "artifact_patch", kind: "patch", title: "Proposed patch", content: "Fake patch artifact. No files were modified." }],
-        events: [
-          { id: "event_prompt", type: "user.prompt.submitted", sessionId: "session_sample", timestamp: "2026-06-30T00:00:00.000Z", prompt: "Run a fake multi-agent workflow." },
-          { id: "event_engine", type: "engine.selected", sessionId: "session_sample", timestamp: "2026-06-30T00:00:00.200Z", engineId: "balanced-coding-group", engineType: "workflow" },
-          { id: "event_workflow", type: "workflow.loaded", sessionId: "session_sample", timestamp: "2026-06-30T00:00:00.400Z", workflowId: "balanced-coding-group", workflowName: "Balanced Coding Group" },
-          { id: "event_compiled", type: "workflow.compiled", sessionId: "session_sample", timestamp: "2026-06-30T00:00:00.600Z", workflowId: "balanced-coding-group", planId: "plan_sample", nodeCount: 4, edgeCount: 3 },
-          { id: "event_route", type: "model.route.selected", sessionId: "session_sample", timestamp: "2026-06-30T00:00:01.000Z", nodeId: "coder", route: "code", selectedModel: "deepseek-v4-flash", reason: "User configured coder strategy." },
-          { id: "event_artifact", type: "artifact.created", sessionId: "session_sample", timestamp: "2026-06-30T00:00:02.000Z", nodeId: "coder", artifact: { id: "artifact_patch", kind: "patch", title: "Proposed patch", content: "Fake patch artifact. No files were modified." } },
-          { id: "event_done", type: "workflow.completed", sessionId: "session_sample", timestamp: "2026-06-30T00:00:03.000Z", workflowId: "balanced-coding-group", planId: "plan_sample" }
-        ]
+        lastPrompt: "",
+        detailTab: "trace"
       };
 
       const elements = {
-        runButton: document.getElementById("runButton"),
-        refreshButton: document.getElementById("refreshButton"),
+        messages: document.getElementById("messages"),
         runForm: document.getElementById("runForm"),
         promptInput: document.getElementById("promptInput"),
-        engineInput: document.getElementById("engineInput"),
+        runButton: document.getElementById("runButton"),
         packInput: document.getElementById("packInput"),
-        selectedPath: document.getElementById("selectedPath"),
-        packDescription: document.getElementById("packDescription"),
+        settingsButton: document.getElementById("settingsButton"),
+        closeSettingsButton: document.getElementById("closeSettingsButton"),
+        settingsPanel: document.getElementById("settingsPanel"),
+        engineInput: document.getElementById("engineInput"),
         configInput: document.getElementById("configInput"),
         timeoutInput: document.getElementById("timeoutInput"),
         maxNodesInput: document.getElementById("maxNodesInput"),
         allowEditsInput: document.getElementById("allowEditsInput"),
         allowShellInput: document.getElementById("allowShellInput"),
         allowNetworkInput: document.getElementById("allowNetworkInput"),
+        packDescription: document.getElementById("packDescription"),
         errorBox: document.getElementById("errorBox"),
-        runList: document.getElementById("runList"),
-        runSubtitle: document.getElementById("runSubtitle"),
-        messages: document.getElementById("messages"),
-        agentStack: document.getElementById("agentStack"),
-        runDetail: document.getElementById("runDetail"),
-        canvasDetail: document.getElementById("canvasDetail"),
-        typeFilter: document.getElementById("typeFilter"),
-        timeline: document.getElementById("timeline"),
-        eventDetail: document.getElementById("eventDetail"),
-        artifactList: document.getElementById("artifactList")
+        detailDrawer: document.getElementById("detailDrawer"),
+        drawerBody: document.getElementById("drawerBody"),
+        closeDrawerButton: document.getElementById("closeDrawerButton"),
+        refreshButton: document.getElementById("refreshButton")
       };
 
       elements.runForm.addEventListener("submit", (event) => {
         event.preventDefault();
         submitRun();
       });
-      elements.refreshButton.addEventListener("click", refreshRuns);
-      elements.engineInput.addEventListener("change", renderControls);
-      elements.packInput.addEventListener("change", () => {
-        renderControls();
-        renderAgentStack();
-        renderCanvasDetail();
-      });
-      elements.typeFilter.addEventListener("change", (event) => {
-        state.filter = event.target.value;
-        render();
-      });
-      document.querySelectorAll("[data-rail-tab]").forEach((button) => {
+      elements.settingsButton.addEventListener("click", () => elements.settingsPanel.classList.toggle("open"));
+      elements.closeSettingsButton.addEventListener("click", () => elements.settingsPanel.classList.remove("open"));
+      elements.closeDrawerButton.addEventListener("click", () => closeDetails());
+      elements.refreshButton.addEventListener("click", () => refreshRuns({ loadLatest: true }));
+      elements.packInput.addEventListener("change", renderSettings);
+      document.querySelectorAll("[data-detail-tab]").forEach((button) => {
         button.addEventListener("click", () => {
-          state.railTab = button.getAttribute("data-rail-tab");
-          render();
-        });
-      });
-      document.querySelectorAll("[data-prompt]").forEach((button) => {
-        button.addEventListener("click", () => {
-          elements.promptInput.value = button.getAttribute("data-prompt");
-          elements.promptInput.focus();
+          state.detailTab = button.getAttribute("data-detail-tab");
+          renderDetails();
         });
       });
 
-      renderControls();
-      render();
       loadPacks();
       refreshRuns();
+      render();
+
+      async function loadPacks() {
+        try {
+          const response = await fetch("/api/packs", { cache: "no-store" });
+          if (!response.ok) throw new Error(`Pack API ${response.status}`);
+          const payload = await response.json();
+          state.packs = Array.isArray(payload.packs) ? payload.packs : [];
+        } catch {
+          state.packs = fallbackPacks();
+        }
+        renderPackOptions();
+        renderSettings();
+      }
+
+      async function refreshRuns(options = {}) {
+        try {
+          const response = await fetch("/api/runs?limit=20", { cache: "no-store" });
+          if (!response.ok) return;
+          const payload = await response.json();
+          state.runs = Array.isArray(payload.runs) ? payload.runs : [];
+          if (options.loadLatest && state.runs[0]) await loadRun(state.runs[0].sessionId);
+        } catch {
+          state.runs = [];
+        }
+      }
+
+      async function loadRun(sessionId) {
+        const response = await fetch(`/api/runs/${encodeURIComponent(sessionId)}`, { cache: "no-store" });
+        if (!response.ok) return;
+        applyTrace(await response.json());
+      }
 
       async function submitRun() {
-        const payload = createRunPayload();
-        if (!payload.prompt.trim()) {
-          showError("Prompt is required.");
+        const prompt = elements.promptInput.value.trim();
+        if (!prompt) {
+          elements.promptInput.focus();
           return;
         }
-
-        state.lastPrompt = payload.prompt;
-        setLoading(true);
+        state.lastPrompt = prompt;
+        state.loading = true;
+        state.trace = null;
         showError("");
-        renderMessages();
+        render();
+
         try {
           const response = await fetch("/api/runs", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
-            body: JSON.stringify(payload)
+            body: JSON.stringify(createRunPayload(prompt))
           });
-          const responseText = await response.text();
-          const body = responseText ? JSON.parse(responseText) : {};
-          if (!response.ok) throw new Error(body.error ?? `Run failed with HTTP ${response.status}`);
+          const text = await response.text();
+          const body = text ? JSON.parse(text) : {};
+          if (!response.ok) throw new Error(body.error ?? `运行失败：HTTP ${response.status}`);
           applyTrace(body);
-          await refreshRuns({ keepSelection: true });
           elements.promptInput.value = "";
+          await refreshRuns();
         } catch (error) {
+          state.loading = false;
           showError(error instanceof Error ? error.message : String(error));
-          renderMessages(error instanceof Error ? error.message : String(error));
-        } finally {
-          setLoading(false);
+          render(error instanceof Error ? error.message : String(error));
         }
       }
 
-      function createRunPayload() {
+      function createRunPayload(prompt) {
         return {
-          prompt: elements.promptInput.value,
+          prompt,
           engine: elements.engineInput.value,
           pack: elements.packInput.value,
           config: elements.configInput.value.trim() || undefined,
@@ -961,410 +757,213 @@
         };
       }
 
-      async function loadPacks() {
-        try {
-          const response = await fetch("/api/packs", { cache: "no-store" });
-          if (!response.ok) throw new Error(`Pack API unavailable (${response.status}).`);
-          const payload = await response.json();
-          state.packs = Array.isArray(payload.packs) ? payload.packs : [];
-          renderPackOptions();
-          renderControls();
-          renderAgentStack();
-          renderCanvasDetail();
-        } catch {
-          state.packs = fallbackPacks();
-          renderPackOptions();
-          renderControls();
-          renderAgentStack();
-          renderCanvasDetail();
-        }
-      }
-
-      async function refreshRuns(options = {}) {
-        try {
-          const response = await fetch("/api/runs?limit=60", { cache: "no-store" });
-          if (!response.ok) throw new Error(`Run API unavailable (${response.status}). Start with: npm.cmd run trace:serve`);
-          const payload = await response.json();
-          state.runs = Array.isArray(payload.runs) ? payload.runs : [];
-          renderRunList();
-          if (!options.keepSelection && state.runs[0]) await loadRun(state.runs[0].sessionId);
-        } catch (error) {
-          showError(error instanceof Error ? error.message : String(error));
-          renderRunList();
-        }
-      }
-
-      async function loadRun(sessionId) {
-        try {
-          const response = await fetch(`/api/runs/${encodeURIComponent(sessionId)}`, { cache: "no-store" });
-          if (!response.ok) throw new Error(`Run ${sessionId} unavailable (${response.status}).`);
-          const trace = await response.json();
-          applyTrace(trace);
-        } catch (error) {
-          showError(error instanceof Error ? error.message : String(error));
-        }
-      }
-
       function applyTrace(trace) {
         if (!Array.isArray(trace.events)) throw new Error("Trace JSON must include an events array.");
         state.trace = trace;
-        state.selectedRunId = trace.sessionId ?? null;
-        state.selectedEventId = trace.events[0]?.id ?? null;
-        state.filter = "all";
-        elements.typeFilter.value = "all";
-        showError("");
-        renderFilters();
+        state.loading = false;
         render();
       }
 
-      function setLoading(value) {
-        state.loading = value;
-        elements.runButton.disabled = value;
-        elements.runButton.textContent = value ? "Running" : "Run";
+      function render(errorMessage) {
+        elements.runButton.disabled = state.loading;
+        elements.runButton.textContent = state.loading ? "…" : "→";
+        if (!state.trace && !state.loading && !errorMessage) {
+          renderInitial();
+          return;
+        }
+        renderThread(errorMessage);
       }
 
-      function showError(message) {
-        elements.errorBox.textContent = message;
-        elements.errorBox.style.display = message ? "block" : "none";
+      function renderInitial() {
+        elements.messages.innerHTML = `
+          <div class="welcome">
+            <div class="bot-mark">⌘</div>
+            <h1>开始工作</h1>
+            <p>选择 Agent Pack，输入任务描述，即刻开始</p>
+            <div class="chips">
+              <button class="chip" data-prompt="重构登录模块，使用 JWT 替换现有 session 方案" type="button">重构登录模块</button>
+              <button class="chip" data-prompt="修复类型错误，并说明修改了哪些文件" type="button">修复类型错误</button>
+              <button class="chip" data-prompt="为当前模块添加单元测试" type="button">添加单元测试</button>
+            </div>
+          </div>
+        `;
+        bindPromptChips();
       }
 
-      function renderControls() {
-        const pack = selectedPack();
-        elements.selectedPath.textContent = pack?.tagline ?? "Select an Agent Pack";
-        elements.packDescription.textContent = pack?.description ?? "Built-in packs define model roles before the run starts.";
+      function renderThread(errorMessage) {
+        const trace = state.trace;
+        const status = errorMessage ? "failed" : state.loading ? "running" : trace?.status ?? "completed";
+        const meta = trace ? summarizeMeta(trace) : { steps: "运行中", cost: "-", artifacts: "0" };
+        const title = errorMessage ? "执行失败" : state.loading ? "正在运行" : "执行完成";
+        const bullets = errorMessage ? [errorMessage] : state.loading ? ["正在分析项目结构", "正在执行所选 Agent Pack"] : summarizeBullets(trace);
+        const drawerButton = trace
+          ? '<button class="chip" id="openDetailsButton" type="button">查看详情 ›</button>'
+          : "";
+        elements.messages.innerHTML = `
+          <div class="thread">
+            <div class="user-line"><div class="user-pill">${escapeHtml(state.lastPrompt || findEvent("user.prompt.submitted")?.prompt || "")}</div></div>
+            <div class="status-pill"><span class="status-dot ${escapeHtml(status)}"></span>${escapeHtml(title)} · ${escapeHtml(meta.steps)}</div>
+            <article class="result-card">
+              <h2>${escapeHtml(resultTitle(status))}</h2>
+              <ul class="summary-list">${bullets.map((item) => `<li>${escapeHtml(item)}</li>`).join("")}</ul>
+              <div class="result-meta">
+                <span>${escapeHtml(meta.artifacts)} 个产物</span>
+                <span>预估成本 ${escapeHtml(meta.cost)}</span>
+                <span>${escapeHtml(selectedPack()?.name ?? elements.packInput.value)}</span>
+              </div>
+              <div>${drawerButton}</div>
+            </article>
+          </div>
+        `;
+        document.getElementById("openDetailsButton")?.addEventListener("click", openDetails);
+      }
+
+      function resultTitle(status) {
+        if (status === "failed") return "任务没有完成";
+        if (status === "running") return "Agent Canvas 正在处理任务";
+        return "任务已完成";
+      }
+
+      function summarizeMeta(trace) {
+        return {
+          steps: `${trace.events?.length ?? 0} 步`,
+          artifacts: String(trace.artifacts?.length ?? 0),
+          cost: `$${Number(trace.estimatedUsd ?? 0).toFixed(4)}`
+        };
+      }
+
+      function summarizeBullets(trace) {
+        const workflow = trace.events.find((event) => event.type === "workflow.loaded");
+        const artifactCount = trace.artifacts?.length ?? 0;
+        const changed = trace.artifacts?.find((artifact) => artifact.kind === "patch");
+        return [
+          `已使用 ${workflow?.workflowName ?? selectedPack()?.name ?? "当前策略组"} 执行任务`,
+          artifactCount > 0 ? `生成了 ${artifactCount} 个结果产物` : "没有生成文件产物",
+          changed ? "包含可查看的代码修改摘要" : "可在详情中查看完整执行轨迹"
+        ];
       }
 
       function renderPackOptions() {
         if (state.packs.length === 0) return;
         const current = elements.packInput.value;
-        elements.packInput.innerHTML = state.packs
-          .map((pack) => `<option value="${escapeHtml(pack.id)}">${escapeHtml(pack.name)}</option>`)
-          .join("");
+        elements.packInput.innerHTML = state.packs.map((pack) => `<option value="${escapeHtml(pack.id)}">${escapeHtml(pack.name)}</option>`).join("");
         elements.packInput.value = state.packs.some((pack) => pack.id === current) ? current : "deepseek-kimi";
       }
 
-      function renderFilters() {
-        const types = [...new Set((state.trace?.events ?? []).map((event) => event.type))].sort();
-        elements.typeFilter.innerHTML = '<option value="all">All events</option>' + types.map((type) => `<option value="${escapeHtml(type)}">${escapeHtml(type)}</option>`).join("");
-        elements.typeFilter.value = state.filter;
-      }
-
-      function render() {
-        renderControls();
-        renderRailTabs();
-        renderRunList();
-        renderMessages();
-        renderAgentStack();
-        renderRunDetail();
-        renderCanvasDetail();
-        renderTimeline();
-        renderDetail();
-        renderArtifacts();
-      }
-
-      function renderRailTabs() {
-        document.querySelectorAll("[data-rail-tab]").forEach((button) => {
-          button.classList.toggle("active", button.getAttribute("data-rail-tab") === state.railTab);
-        });
-        document.querySelectorAll(".panel-view").forEach((view) => view.classList.remove("active"));
-        document.getElementById(`${state.railTab}Panel`)?.classList.add("active");
-      }
-
-      function renderRunList() {
-        if (state.runs.length === 0) {
-          elements.runList.innerHTML = '<div class="empty">No local runs yet.</div>';
-          return;
-        }
-        elements.runList.innerHTML = state.runs.map((run) => {
-          const active = run.sessionId === state.selectedRunId ? " active" : "";
-          const title = run.workflowName ?? run.workflowId ?? run.engineId ?? "Local run";
-          const meta = `${run.updatedAt ?? ""} / ${run.engineId ?? "unknown"}`;
-          return `
-            <button class="run-item${active}" data-run-id="${escapeHtml(run.sessionId)}">
-              <span>${escapeHtml(title)}</span>
-              <span class="meta">${escapeHtml(meta)}</span>
-            </button>
-          `;
-        }).join("");
-        elements.runList.querySelectorAll("[data-run-id]").forEach((button) => {
-          button.addEventListener("click", () => loadRun(button.getAttribute("data-run-id")));
-        });
-      }
-
-      function renderMessages(errorMessage) {
-        if (!state.trace && !state.loading && !errorMessage) {
-          elements.messages.innerHTML = `
-            <div class="welcome">
-              <h1>Code with Agent Canvas</h1>
-              <p>Ask for a coding task, choose an Agent Pack, and keep the model routing visible only when it helps.</p>
-              <div class="quick-actions">
-                <button class="chip" data-prompt="Inspect this project and suggest the safest next coding step.">Inspect project</button>
-                <button class="chip" data-prompt="Create a small plan for improving the Agent Canvas UI.">Plan UI work</button>
-                <button class="chip" data-prompt="Run a fake multi-agent coding workflow and summarize the trace.">Test agent group</button>
-              </div>
-            </div>
-          `;
-          document.querySelectorAll("[data-prompt]").forEach((button) => {
-            button.addEventListener("click", () => {
-              elements.promptInput.value = button.getAttribute("data-prompt");
-              elements.promptInput.focus();
-            });
-          });
-          return;
-        }
-
-        const prompt = state.lastPrompt || findEvent("user.prompt.submitted")?.prompt || "Loaded local run.";
-        const trace = state.trace;
-        const workflow = findEvent("workflow.loaded");
-        const compiled = findEvent("workflow.compiled");
-        const status = errorMessage ? "failed" : state.loading ? "running" : trace?.status ?? "completed";
-        const summary = errorMessage
-          ? errorMessage
-          : state.loading
-            ? "Running the selected engine and collecting events..."
-            : `${workflow?.workflowName ?? workflow?.workflowId ?? "Local workflow"} completed with ${trace?.events?.length ?? 0} events, ${trace?.artifacts?.length ?? 0} artifacts, and estimated cost $${Number(trace?.estimatedUsd ?? 0).toFixed(4)}.`;
-        elements.messages.innerHTML = `
-          <div class="thread">
-            <div class="message user"><div class="bubble">${escapeHtml(prompt)}</div></div>
-            <div class="message assistant">
-              <div class="bubble">
-                <div class="bubble-title">Agent Canvas ${escapeHtml(status)}</div>
-                <div>${escapeHtml(summary)}</div>
-                <div class="hint" style="margin-top: 10px;">${compiled ? escapeHtml(`${compiled.nodeCount} agent nodes / ${compiled.edgeCount} edges`) : "Plan will appear after the run starts."}</div>
-              </div>
-            </div>
-          </div>
-        `;
-      }
-
-      function renderAgentStack() {
-        const projection = projectAgents(state.trace?.events ?? []);
-        elements.agentStack.innerHTML = projection.map(agentCard).join("");
-      }
-
-      function renderRunDetail() {
-        const trace = state.trace;
-        if (!trace) {
-          elements.runDetail.innerHTML = '<div class="empty">Run a task or select a local run.</div>';
-          return;
-        }
-        const engine = findEvent("engine.selected");
-        const workflow = findEvent("workflow.loaded");
-        const compiled = findEvent("workflow.compiled");
-        elements.runSubtitle.textContent = `${trace.sessionId ?? "unknown"} / ${workflow?.workflowName ?? workflow?.workflowId ?? "local run"}`;
-        elements.runDetail.innerHTML = `
-          <div class="metric-grid">
-            ${metric("Status", trace.status ?? "unknown")}
-            ${metric("Cost", `$${Number(trace.estimatedUsd ?? 0).toFixed(4)}`)}
-            ${metric("Events", String(trace.events?.length ?? 0))}
-            ${metric("Artifacts", String(trace.artifacts?.length ?? 0))}
-          </div>
-          <div style="height: 10px;"></div>
-          ${metric("Engine", engine?.engineId ?? "unknown")}
-          <div style="height: 8px;"></div>
-          ${metric("Workflow", workflow?.workflowName ?? workflow?.workflowId ?? "unknown")}
-          <div style="height: 8px;"></div>
-          ${metric("Plan", compiled ? `${compiled.nodeCount} nodes / ${compiled.edgeCount} edges` : "not compiled")}
-        `;
-      }
-
-      function renderCanvasDetail() {
-        const projection = projectAgents(state.trace?.events ?? []);
-        elements.canvasDetail.innerHTML = `
-          <div class="agent-stack">
-            ${projection.map(agentCard).join("")}
-          </div>
-        `;
-      }
-
-      function projectAgents(events) {
+      function renderSettings() {
         const pack = selectedPack();
-        const defaults = pack
-          ? Object.entries(pack.strategies).map(([id, strategy]) => ({
-              id,
-              role: titleCase(strategy.role),
-              route: id,
-              model: `${strategy.provider}/${strategy.model}`,
-              tools: (strategy.tools ?? []).join(", ") || "-",
-              permissions: (strategy.permissions ?? []).join(", ") || "-",
-              intent: strategy.intent
-            }))
-          : [
-              { id: "supervisor", role: "Supervisor", route: "planning", model: "deepseek / user configured", tools: "project_search, read_file", permissions: "read, cost" },
-              { id: "coder", role: "Coder", route: "code", model: "kimi / user configured", tools: "read_file, propose_patch", permissions: "read, patch" }
-            ];
-        const byId = new Map(defaults.map((item) => [item.id, { ...item, status: "pending" }]));
-        for (const event of events) {
-          const nodeId = event.nodeId;
-          if (!nodeId) continue;
-          if (!byId.has(nodeId)) byId.set(nodeId, { id: nodeId, role: titleCase(nodeId), route: nodeId, model: "-", tools: "-", permissions: "-", status: "pending" });
-          const node = byId.get(nodeId);
-          if (event.type === "agent.started") node.status = "running";
-          if (event.type === "model.route.selected") {
-            node.route = event.route;
-            node.model = event.selectedModel;
-          }
-          if (event.type === "permission.checked") node.permissions = `${event.scope}: ${event.decision}`;
-          if (event.type === "backend.session.observed") node.status = event.status === "completed" ? "observed" : event.status;
-          if (event.type === "agent.completed") node.status = event.status;
-        }
-        return [...byId.values()];
+        elements.packDescription.textContent = pack ? `${pack.tagline}。${pack.description}` : "选择一个 Agent Pack 后开始运行。";
       }
 
-      function agentCard(agent) {
-        return `
-          <article class="agent-card">
-            <div class="agent-head">
-              <span>${escapeHtml(agent.role)}</span>
-              <span class="badge ${escapeHtml(agent.status)}">${escapeHtml(agent.status)}</span>
+      function openDetails() {
+        elements.detailDrawer.classList.add("open");
+        renderDetails();
+      }
+
+      function closeDetails() {
+        elements.detailDrawer.classList.remove("open");
+      }
+
+      function renderDetails() {
+        document.querySelectorAll("[data-detail-tab]").forEach((button) => {
+          button.classList.toggle("active", button.getAttribute("data-detail-tab") === state.detailTab);
+        });
+        if (!state.trace) {
+          elements.drawerBody.innerHTML = '<div class="empty">暂无运行详情</div>';
+          return;
+        }
+        elements.drawerBody.innerHTML = state.detailTab === "artifacts" ? renderArtifacts() : renderTrace();
+      }
+
+      function renderTrace() {
+        const visible = state.trace.events
+          .filter((event) => ["workflow.loaded", "workflow.compiled", "agent.started", "model.route.selected", "artifact.created", "workflow.completed", "workflow.failed"].includes(event.type))
+          .slice(0, 24);
+        if (visible.length === 0) return '<div class="empty">暂无 Trace</div>';
+        return `<div class="trace-list">${visible.map((event) => `
+          <div class="trace-item">
+            <div class="trace-check">${event.type === "workflow.failed" ? "!" : "✓"}</div>
+            <div>
+              <div class="trace-title">${escapeHtml(traceTitle(event))}</div>
+              <div class="trace-copy">${escapeHtml(traceCopy(event))}</div>
             </div>
-            <div class="agent-row"><span>Model</span><span>${escapeHtml(agent.model)}</span></div>
-            <div class="agent-row"><span>Route</span><span>${escapeHtml(agent.route)}</span></div>
-            <div class="agent-row"><span>Tools</span><span>${escapeHtml(agent.tools)}</span></div>
-            <div class="agent-row"><span>Policy</span><span>${escapeHtml(agent.permissions)}</span></div>
-          </article>
-        `;
+            <div class="trace-time">${escapeHtml(relativeEventTime(event))}</div>
+          </div>
+        `).join("")}</div>`;
+      }
+
+      function renderArtifacts() {
+        const artifacts = state.trace.artifacts ?? [];
+        if (artifacts.length === 0) return '<div class="empty">暂无产物</div>';
+        return artifacts.map((artifact) => `
+          <div class="artifact">
+            <strong>${escapeHtml(artifact.title)}</strong>
+            <span class="hint">${escapeHtml(artifact.kind)} · ${escapeHtml(artifact.id)}</span>
+            <span class="hint">${escapeHtml(summarizeArtifact(artifact))}</span>
+          </div>
+        `).join("");
+      }
+
+      function traceTitle(event) {
+        if (event.type === "workflow.loaded") return "载入策略组";
+        if (event.type === "workflow.compiled") return "生成执行计划";
+        if (event.type === "agent.started") return `${titleCase(event.nodeId)} 开始工作`;
+        if (event.type === "model.route.selected") return `${titleCase(event.nodeId)} 选择模型`;
+        if (event.type === "artifact.created") return "生成产物";
+        if (event.type === "workflow.completed") return "流程完成";
+        if (event.type === "workflow.failed") return "流程失败";
+        return event.type;
+      }
+
+      function traceCopy(event) {
+        if (event.type === "workflow.loaded") return event.workflowName ?? event.workflowId;
+        if (event.type === "workflow.compiled") return `${event.nodeCount} 个节点，${event.edgeCount} 条连接`;
+        if (event.type === "agent.started") return event.role ?? event.nodeId;
+        if (event.type === "model.route.selected") return `${event.selectedModel} · ${event.reason}`;
+        if (event.type === "artifact.created") return `${event.artifact.kind} · ${event.artifact.title}`;
+        if (event.type === "workflow.failed") return event.message;
+        return event.workflowId ?? event.timestamp ?? "";
+      }
+
+      function relativeEventTime(event) {
+        if (!state.trace?.events?.[0]?.timestamp || !event.timestamp) return "";
+        const start = new Date(state.trace.events[0].timestamp).getTime();
+        const current = new Date(event.timestamp).getTime();
+        const diff = Math.max(0, (current - start) / 1000);
+        return `${diff.toFixed(1)}s`;
+      }
+
+      function bindPromptChips() {
+        document.querySelectorAll("[data-prompt]").forEach((button) => {
+          button.addEventListener("click", () => {
+            elements.promptInput.value = button.getAttribute("data-prompt");
+            elements.promptInput.focus();
+          });
+        });
+      }
+
+      function showError(message) {
+        elements.errorBox.textContent = message;
+        elements.errorBox.style.display = message ? "block" : "none";
+        if (message) elements.settingsPanel.classList.add("open");
       }
 
       function selectedPack() {
         return state.packs.find((pack) => pack.id === elements.packInput.value) ?? fallbackPacks().find((pack) => pack.id === elements.packInput.value);
       }
 
-      function fallbackPacks() {
-        return [
-          {
-            id: "deepseek-solo",
-            name: "DeepSeek Solo",
-            tagline: "Low-cost coding baseline",
-            description: "DeepSeek handles planning, coding, and review for a low-cost first pass.",
-            strategies: {
-              supervisor: { role: "supervisor", intent: "Define task rules.", provider: "deepseek", model: "deepseek-v4-flash", tools: ["project_search", "read_file"], permissions: ["filesystem.read", "model.cost"] },
-              coder: { role: "coder", intent: "Implement a bounded change.", provider: "deepseek", model: "deepseek-v4-flash", tools: ["read_file", "propose_patch"], permissions: ["filesystem.read", "filesystem.patch", "model.cost"] }
-            }
-          },
-          {
-            id: "deepseek-kimi",
-            name: "DeepSeek + Kimi",
-            tagline: "Rules by DeepSeek, code by Kimi",
-            description: "DeepSeek plans and sets constraints; Kimi writes code and reviews the local patch.",
-            strategies: {
-              supervisor: { role: "supervisor", intent: "Set rules and acceptance criteria.", provider: "deepseek", model: "deepseek-v4-flash", tools: ["project_search", "read_file"], permissions: ["filesystem.read", "model.cost"] },
-              coder: { role: "coder", intent: "Write code and produce patch artifacts.", provider: "kimi", model: "kimi-k2.6", tools: ["read_file", "propose_patch"], permissions: ["filesystem.read", "filesystem.patch", "model.cost"] },
-              reviewer: { role: "reviewer", intent: "Review the local patch.", provider: "kimi", model: "kimi-k2.6", tools: ["diff", "fake_test"], permissions: ["filesystem.read", "model.cost"] }
-            }
-          },
-          {
-            id: "deepseek-kimi-openai",
-            name: "DeepSeek + Kimi + OpenAI",
-            tagline: "Rules, code, strong review",
-            description: "DeepSeek sets rules, Kimi writes code, and OpenAI performs the final code review.",
-            strategies: {
-              supervisor: { role: "supervisor", intent: "Set rules and constraints.", provider: "deepseek", model: "deepseek-v4-flash", tools: ["project_search", "read_file"], permissions: ["filesystem.read", "model.cost"] },
-              coder: { role: "coder", intent: "Write code and emit patches.", provider: "kimi", model: "kimi-k2.6", tools: ["read_file", "propose_patch"], permissions: ["filesystem.read", "filesystem.patch", "model.cost"] },
-              reviewer: { role: "reviewer", intent: "Review code quality and risks.", provider: "sub2api", model: "gpt-5.4-mini", tools: ["diff", "fake_test"], permissions: ["filesystem.read", "model.cost"] }
-            }
-          }
-        ];
-      }
-
-      function renderTimeline() {
-        const events = filteredEvents();
-        if (events.length === 0) {
-          elements.timeline.innerHTML = '<div class="empty">No matching events.</div>';
-          return;
-        }
-        elements.timeline.innerHTML = events.map((event) => eventButton(event)).join("");
-        elements.timeline.querySelectorAll("[data-event-id]").forEach((button) => {
-          button.addEventListener("click", () => {
-            state.selectedEventId = button.getAttribute("data-event-id");
-            render();
-          });
-        });
-      }
-
-      function renderDetail() {
-        const event = (state.trace?.events ?? []).find((item) => item.id === state.selectedEventId);
-        if (!event) {
-          elements.eventDetail.innerHTML = '<div class="empty">Select an event.</div>';
-          return;
-        }
-        elements.eventDetail.innerHTML = `<pre>${escapeHtml(JSON.stringify(event, null, 2))}</pre>`;
-      }
-
-      function renderArtifacts() {
-        const artifacts = state.trace?.artifacts ?? [];
-        if (artifacts.length === 0) {
-          elements.artifactList.innerHTML = '<div class="empty">No artifacts.</div>';
-          return;
-        }
-        elements.artifactList.innerHTML = artifacts.map((artifact) => `
-          <div class="artifact">
-            <div class="artifact-title">
-              <span>${escapeHtml(artifact.title)}</span>
-              <span class="badge">${escapeHtml(artifact.kind)}</span>
-            </div>
-            <div class="hint">${escapeHtml(artifact.id)}</div>
-            <div class="event-copy">${escapeHtml(summarizeArtifact(artifact))}</div>
-          </div>
-        `).join("");
-      }
-
-      function filteredEvents() {
-        const events = state.trace?.events ?? [];
-        if (state.filter === "all") return events;
-        return events.filter((event) => event.type === state.filter);
-      }
-
-      function eventButton(event) {
-        const active = event.id === state.selectedEventId ? " active" : "";
-        const badge = statusBadge(event);
-        return `
-          <button class="event${active}" data-event-id="${escapeHtml(event.id)}">
-            <div class="event-head">
-              <span class="event-type">${escapeHtml(event.type)}</span>
-              ${badge}
-            </div>
-            <div class="event-copy">${escapeHtml(eventSummary(event))}</div>
-          </button>
-        `;
-      }
-
-      function statusBadge(event) {
-        const value = event.decision ?? event.status ?? event.artifact?.kind ?? event.engineType ?? "";
-        if (!value) return "";
-        return `<span class="badge ${escapeHtml(String(value))}">${escapeHtml(String(value))}</span>`;
-      }
-
-      function eventSummary(event) {
-        if (event.type === "user.prompt.submitted") return event.prompt;
-        if (event.type === "engine.selected") return `${event.engineId} / ${event.engineType}`;
-        if (event.type === "workflow.loaded") return `${event.workflowName} (${event.workflowId})`;
-        if (event.type === "workflow.compiled") return `${event.nodeCount} nodes, ${event.edgeCount} edges`;
-        if (event.type === "backend.session.observed") return `${event.nodeId} ${event.backend}/${event.externalSessionId} messages=${event.messageCount} diffs=${event.diffCount}`;
-        if (event.type === "permission.checked") return `${event.nodeId} ${event.scope} -> ${event.decision}`;
-        if (event.type === "model.route.selected") return `${event.nodeId} -> ${event.selectedModel}: ${event.reason}`;
-        if (event.type === "artifact.created") return `${event.artifact.kind}: ${event.artifact.title}`;
-        if (event.type === "model.request.completed") return `${event.nodeId} ${event.model}: ${String(event.content ?? "").slice(0, 100)}`;
-        if (event.type === "workflow.failed") return event.message;
-        return event.nodeId ?? event.workflowId ?? event.engineId ?? event.timestamp ?? "";
+      function findEvent(type) {
+        return state.trace?.events?.find((event) => event.type === type);
       }
 
       function summarizeArtifact(artifact) {
         const diffs = artifact.metadata?.diffs;
         if (Array.isArray(diffs) && diffs.length > 0) return diffs.map((diff) => `${diff.file} +${diff.additions ?? 0} -${diff.deletions ?? 0}`).join(", ");
-        return String(artifact.content ?? "").replace(/\s+/g, " ").slice(0, 180);
-      }
-
-      function findEvent(type) {
-        return (state.trace?.events ?? []).find((event) => event.type === type);
-      }
-
-      function metric(label, value) {
-        return `<div class="metric"><span>${escapeHtml(label)}</span><strong>${escapeHtml(value)}</strong></div>`;
+        return String(artifact.content ?? "").replace(/\s+/g, " ").slice(0, 160);
       }
 
       function titleCase(value) {
-        return String(value).replace(/[-_]/g, " ").replace(/\b\w/g, (letter) => letter.toUpperCase());
+        return String(value ?? "").replace(/[-_]/g, " ").replace(/\b\w/g, (letter) => letter.toUpperCase());
       }
 
       function escapeHtml(value) {
@@ -1373,6 +972,29 @@
           .replaceAll("<", "&lt;")
           .replaceAll(">", "&gt;")
           .replaceAll('"', "&quot;");
+      }
+
+      function fallbackPacks() {
+        return [
+          {
+            id: "deepseek-solo",
+            name: "DeepSeek Solo",
+            tagline: "低成本基线",
+            description: "DeepSeek 负责规则制定、代码编写和简单审查。"
+          },
+          {
+            id: "deepseek-kimi",
+            name: "DeepSeek + Kimi",
+            tagline: "DeepSeek 定规则，Kimi 写代码",
+            description: "DeepSeek 负责任务规划和规则制定，Kimi 负责代码编写。"
+          },
+          {
+            id: "deepseek-kimi-openai",
+            name: "DeepSeek + Kimi + OpenAI",
+            tagline: "规则、编码、强审查",
+            description: "DeepSeek 定规则，Kimi 写代码，OpenAI 负责最终审查。"
+          }
+        ];
       }
     </script>
   </body>

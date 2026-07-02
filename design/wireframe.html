@@ -1,58 +1,66 @@
 <!doctype html>
-<html lang="en">
+<html lang="zh-CN">
   <head>
     <meta charset="utf-8" />
-    <title>Agent Canvas Code Chat Shell Wireframe</title>
+    <title>Agent Canvas Dialog Wireframe</title>
     <link rel="stylesheet" href="./design-tokens.css" />
     <style>
       * { box-sizing: border-box; }
       body {
         margin: 0;
         min-height: 100vh;
-        background: var(--ac-bg);
+        background: var(--ac-surface);
         color: var(--ac-text);
         font-family: var(--ac-font);
-        font-size: var(--ac-font-size-body);
       }
-      main {
+      .app {
         display: grid;
-        grid-template-columns: 260px minmax(520px, 1fr) 330px;
-        min-height: 100vh;
+        grid-template-columns: 48px 1fr;
+        grid-template-rows: 56px 1fr 72px;
+        height: 100vh;
       }
-      .sidebar { padding: 16px; background: var(--ac-chrome); border-right: 1px solid var(--ac-border); }
-      .chat { display: grid; grid-template-rows: 56px 1fr auto; background: var(--ac-surface); }
-      .topbar { display: flex; align-items: center; justify-content: space-between; padding: 0 18px; border-bottom: 1px solid var(--ac-border); }
-      .messages { display: grid; align-content: center; justify-items: center; padding: 32px; }
-      .composer { margin: 0 auto 24px; width: min(820px, calc(100% - 48px)); min-height: 130px; border: 1px solid var(--ac-border); border-radius: var(--ac-radius); background: var(--ac-surface-strong); }
-      .rail { padding: 16px; border-left: 1px solid var(--ac-border); background: var(--ac-surface); }
-      .agent-card { min-height: 96px; border: 1px solid var(--ac-border); border-radius: var(--ac-radius); background: var(--ac-surface-strong); margin-bottom: 10px; }
-      @media (max-width: 1100px) {
-        main { grid-template-columns: 220px 1fr; }
-        .rail { grid-column: 1 / -1; border-left: 0; border-top: 1px solid var(--ac-border); }
+      header {
+        grid-column: 1 / -1;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 0 20px;
+        border-bottom: 1px solid var(--ac-border);
       }
-      @media (max-width: 820px) {
-        main { grid-template-columns: 1fr; }
-        .sidebar { border-right: 0; border-bottom: 1px solid var(--ac-border); }
+      .rail {
+        grid-row: 2 / 4;
+        border-right: 1px solid var(--ac-border);
+        background: var(--ac-surface-muted);
+      }
+      .messages {
+        display: grid;
+        place-items: center;
+        overflow: auto;
+        padding: 32px 32px 96px;
+      }
+      .composer {
+        display: grid;
+        grid-template-columns: 150px 40px 1fr 44px;
+        gap: 8px;
+        align-items: center;
+        width: min(768px, calc(100% - 48px));
+        margin: 0 auto 16px;
+      }
+      .details {
+        position: fixed;
+        inset: 56px 0 72px auto;
+        width: 360px;
+        border-left: 1px solid var(--ac-border);
+        background: var(--ac-surface);
       }
     </style>
   </head>
   <body>
-    <main>
-      <aside class="sidebar">Navigation and recent runs</aside>
-      <section class="chat">
-        <header class="topbar">
-          <strong>Code with Agent Canvas</strong>
-          <button>Open Canvas</button>
-        </header>
-        <div class="messages">Conversation first, configuration second.</div>
-        <div class="composer">Prompt, engine selector, Agent Pack selector, Run button</div>
-      </section>
-      <aside class="rail">
-        <div class="agent-card">DeepSeek rules slot</div>
-        <div class="agent-card">Kimi coding slot</div>
-        <div class="agent-card">OpenAI review slot when selected</div>
-        <div class="agent-card">Trace and artifacts</div>
-      </aside>
+    <main class="app">
+      <header>Agent Canvas / my-project</header>
+      <aside class="rail"></aside>
+      <section class="messages">开始工作</section>
+      <form class="composer">Agent Pack / 设置 / 输入任务 / 发送</form>
     </main>
   </body>
 </html>
