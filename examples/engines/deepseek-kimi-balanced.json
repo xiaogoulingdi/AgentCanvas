@@ -1,0 +1,31 @@
+{
+  "id": "deepseek-kimi-balanced",
+  "name": "DeepSeek + Kimi Balanced",
+  "routes": {
+    "default": {
+      "provider": "deepseek",
+      "model": "deepseek-v4-flash",
+      "reason": "Default to a fast low-cost coding-capable model."
+    },
+    "planning": {
+      "provider": "deepseek",
+      "model": "deepseek-v4-flash",
+      "reason": "Planning should be fast and inexpensive."
+    },
+    "research": {
+      "provider": "deepseek",
+      "model": "deepseek-v4-flash",
+      "reason": "Research is low-risk and can use the cheaper model first."
+    },
+    "code": {
+      "provider": "deepseek",
+      "model": "deepseek-v4-flash",
+      "reason": "Code proposal uses the balanced coding model."
+    },
+    "review": {
+      "provider": "kimi",
+      "model": "kimi-k2.6",
+      "reason": "Review gets a stronger independent model."
+    }
+  }
+}

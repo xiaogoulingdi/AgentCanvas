@@ -28,6 +28,14 @@ describe("FakeBackendAdapter", () => {
     }
 
     expect(events.map((event) => event.type)).toContain("artifact.created");
+    expect(events).toContainEqual(
+      expect.objectContaining({
+        type: "permission.checked",
+        scope: "filesystem.patch",
+        decision: "ask",
+        source: "static-policy"
+      })
+    );
     expect(events.at(-1)?.type).toBe("agent.completed");
   });
 });

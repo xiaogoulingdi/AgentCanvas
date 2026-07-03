@@ -1,0 +1,66 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="utf-8" />
+    <title>Agent Canvas Dialog Wireframe</title>
+    <link rel="stylesheet" href="./design-tokens.css" />
+    <style>
+      * { box-sizing: border-box; }
+      body {
+        margin: 0;
+        min-height: 100vh;
+        background: var(--ac-surface);
+        color: var(--ac-text);
+        font-family: var(--ac-font);
+      }
+      .app {
+        display: grid;
+        grid-template-columns: 48px 1fr;
+        grid-template-rows: 56px 1fr 72px;
+        height: 100vh;
+      }
+      header {
+        grid-column: 1 / -1;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 0 20px;
+        border-bottom: 1px solid var(--ac-border);
+      }
+      .rail {
+        grid-row: 2 / 4;
+        border-right: 1px solid var(--ac-border);
+        background: var(--ac-surface-muted);
+      }
+      .messages {
+        display: grid;
+        place-items: center;
+        overflow: auto;
+        padding: 32px 32px 96px;
+      }
+      .composer {
+        display: grid;
+        grid-template-columns: 150px 40px 1fr 44px;
+        gap: 8px;
+        align-items: center;
+        width: min(768px, calc(100% - 48px));
+        margin: 0 auto 16px;
+      }
+      .details {
+        position: fixed;
+        inset: 56px 0 72px auto;
+        width: 360px;
+        border-left: 1px solid var(--ac-border);
+        background: var(--ac-surface);
+      }
+    </style>
+  </head>
+  <body>
+    <main class="app">
+      <header>Agent Canvas / my-project</header>
+      <aside class="rail"></aside>
+      <section class="messages">开始工作</section>
+      <form class="composer">Agent Pack / 设置 / 输入任务 / 发送</form>
+    </main>
+  </body>
+</html>

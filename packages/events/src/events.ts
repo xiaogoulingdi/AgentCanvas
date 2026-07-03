@@ -4,8 +4,10 @@ export type AgentEvent =
   | WorkflowLoadedEvent
   | WorkflowCompiledEvent
   | AgentStartedEvent
+  | BackendSessionObservedEvent
   | ModelRouteSelectedEvent
   | ModelRequestCompletedEvent
+  | PermissionPolicyLoadedEvent
   | ToolCallRequestedEvent
   | PermissionCheckedEvent
   | ToolCallCompletedEvent
@@ -20,6 +22,8 @@ export type BaseEvent = {
   sessionId: string;
   timestamp: string;
 };
+
+export type EventMetadata = Record<string, unknown>;
 
 export type UserPromptSubmittedEvent = BaseEvent & {
   type: "user.prompt.submitted";
@@ -52,6 +56,17 @@ export type AgentStartedEvent = BaseEvent & {
   role: string;
 };
 
+export type BackendSessionObservedEvent = BaseEvent & {
+  type: "backend.session.observed";
+  nodeId: string;
+  backend: string;
+  externalSessionId: string;
+  status: "running" | "completed" | "failed" | "unknown";
+  messageCount: number;
+  diffCount: number;
+  metadata?: EventMetadata;
+};
+
 export type ModelRouteSelectedEvent = BaseEvent & {
   type: "model.route.selected";
   nodeId: string;
@@ -68,6 +83,13 @@ export type ModelRequestCompletedEvent = BaseEvent & {
   content: string;
 };
 
+export type PermissionPolicyLoadedEvent = BaseEvent & {
+  type: "permission.policy.loaded";
+  source: string;
+  defaultDecision: "allow" | "ask" | "deny";
+  policy: Record<string, "allow" | "ask" | "deny">;
+};
+
 export type ToolCallRequestedEvent = BaseEvent & {
   type: "tool.call.requested";
   nodeId: string;
@@ -79,6 +101,8 @@ export type PermissionCheckedEvent = BaseEvent & {
   nodeId: string;
   scope: string;
   decision: "allow" | "ask" | "deny";
+  reason?: string;
+  source?: string;
 };
 
 export type ToolCallCompletedEvent = BaseEvent & {
@@ -126,4 +150,5 @@ export type Artifact = {
   kind: "patch" | "report" | "trace" | "note";
   title: string;
   content: string;
+  metadata?: EventMetadata;
 };

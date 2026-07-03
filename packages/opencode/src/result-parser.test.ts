@@ -1,0 +1,53 @@
+import { describe, expect, it } from "vitest";
+import { parseOpenCodeResult } from "./result-parser.ts";
+
+describe("parseOpenCodeResult", () => {
+  it("extracts assistant text, token usage, cost, and diff count", () => {
+    const parsed = parseOpenCodeResult({
+      message: {
+        data: {
+          info: {
+            cost: 0.001,
+            tokens: {
+              input: 10,
+              output: 2,
+              total: 12
+            }
+          },
+          status: "completed",
+          parts: [
+            { type: "reasoning", text: "thinking" },
+            { type: "text", text: "OK" }
+          ]
+        }
+      },
+      messages: {
+        data: [{ id: "msg-1" }, { id: "msg-2" }]
+      },
+      diff: {
+        data: [{ file: "README.md", before: "", after: "OK", additions: 1, deletions: 0 }]
+      }
+    });
+
+    expect(parsed).toEqual({
+      text: "OK",
+      inputTokens: 10,
+      outputTokens: 2,
+      totalTokens: 12,
+      cost: 0.001,
+      messageCount: 2,
+      status: "completed",
+      diffCount: 1,
+      diffs: [
+        {
+          file: "README.md",
+          before: "",
+          after: "OK",
+          additions: 1,
+          deletions: 0
+        }
+      ],
+      diffMarkdown: ["### README.md", "", "Additions: 1", "Deletions: 0", "", "```diff", "--- a/README.md", "+++ b/README.md", "+OK", "```"].join("\n")
+    });
+  });
+});

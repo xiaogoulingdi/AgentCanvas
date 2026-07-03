@@ -6,11 +6,32 @@
   "scripts": {
     "check": "tsc --noEmit",
     "test": "vitest run",
-    "run:fake": "node --experimental-strip-types apps/cli/src/run.ts examples/workflows/research-code.json --prompt \"Analyze this project and propose a safe next step\""
+    "run:fake": "node --experimental-strip-types apps/cli/src/run.ts examples/workflows/research-code.json --prompt \"Analyze this project and propose a safe next step\"",
+    "run:model": "node --experimental-strip-types apps/cli/src/run-model.ts",
+    "run:opencode": "node --experimental-strip-types apps/cli/src/run-opencode.ts",
+    "run:list": "node --experimental-strip-types apps/cli/src/run-list.ts",
+    "run:inspect": "node --experimental-strip-types apps/cli/src/run-inspect.ts",
+    "trace:serve": "node --experimental-strip-types apps/trace-observer/server.ts",
+    "patch:list": "node --experimental-strip-types apps/cli/src/patch-list.ts",
+    "patch:apply": "node --experimental-strip-types apps/cli/src/patch-apply.ts",
+    "patch:reject": "node --experimental-strip-types apps/cli/src/patch-reject.ts",
+    "patch:revert": "node --experimental-strip-types apps/cli/src/patch-revert.ts",
+    "agent": "node --experimental-strip-types apps/cli/src/agent.ts",
+    "group:compile": "node --experimental-strip-types apps/cli/src/group-compile.ts",
+    "file:edit": "node --experimental-strip-types apps/cli/src/edit-file.ts",
+    "opencode:health": "node --experimental-strip-types apps/cli/src/opencode-health.ts",
+    "opencode:models": "node --experimental-strip-types apps/cli/src/opencode-models.ts",
+    "opencode:prompt": "node --experimental-strip-types apps/cli/src/opencode-prompt.ts",
+    "probe:deepseek": "node --experimental-strip-types apps/cli/src/probe-model.ts --provider deepseek",
+    "probe:kimi": "node --experimental-strip-types apps/cli/src/probe-model.ts --provider kimi",
+    "probe:custom": "node --experimental-strip-types apps/cli/src/probe-model.ts --provider custom"
   },
   "devDependencies": {
     "@types/node": "^24.0.0",
     "typescript": "^5.8.0",
     "vitest": "^3.2.0"
+  },
+  "dependencies": {
+    "@opencode-ai/sdk": "^1.17.11"
   }
 }

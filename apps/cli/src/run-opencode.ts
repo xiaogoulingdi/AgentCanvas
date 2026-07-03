@@ -1,0 +1,70 @@
+import { readFile } from "node:fs/promises";
+import { createId } from "../../../packages/shared/src/ids.ts";
+import { compileWorkflow } from "../../../packages/workflow/src/compiler.ts";
+import type { WorkflowDefinition } from "../../../packages/workflow/src/types.ts";
+import { OpenCodeBackendAdapter } from "../../../packages/backends/src/opencode-backend.ts";
+import { runWorkflow } from "../../../packages/runtime/src/run-workflow.ts";
+import { renderTraceText } from "../../../packages/trace/src/render-text.ts";
+import { renderTraceJson } from "../../../packages/trace/src/render-json.ts";
+import type { ExecutionEngine } from "../../../packages/engines/src/types.ts";
+import { createCliEventLog, printSessionFooter } from "./run-log.ts";
+import { loadCliConfig, opencodeModelFromConfig, permissionBrokerFromConfig, readArg } from "./config.ts";
+
+const workflowPath = readArg("--workflow") ?? "examples/workflows/research-code.json";
+const prompt = readArg("--prompt");
+const cliConfig = await loadCliConfig();
+const configModel = opencodeModelFromConfig(cliConfig);
+const providerId = readArg("--provider-id") ?? configModel.providerId ?? "deepseek";
+const modelId = readArg("--model-id") ?? configModel.modelId ?? "deepseek-v4-flash";
+const maxNodes = Number(readArg("--max-nodes") ?? "1");
+const timeoutMs = Number(readArg("--timeout-ms") ?? "60000");
+const json = process.argv.includes("--json");
+const allowEdits = process.argv.includes("--allow-opencode-edits");
+const allowShell = process.argv.includes("--allow-opencode-shell");
+const allowNetwork = process.argv.includes("--allow-opencode-network");
+const configPermissionBroker = permissionBrokerFromConfig(cliConfig);
+
+if (!prompt) {
+  console.error(
+    "Usage: npm.cmd run run:opencode -- --workflow <workflow.json> --prompt <prompt> [--config <agentcanvas.config.json>] [--provider-id <id>] [--model-id <id>] [--max-nodes <n>] [--timeout-ms <ms>] [--allow-opencode-edits] [--allow-opencode-shell] [--allow-opencode-network] [--json]"
+  );
+  process.exit(1);
+}
+
+const workflow = JSON.parse(await readFile(workflowPath, "utf8")) as WorkflowDefinition;
+const plan = compileWorkflow(workflow);
+const eventLog = createCliEventLog();
+const sessionId = createId("session");
+const engine: ExecutionEngine = {
+  id: "opencode",
+  type: "workflow",
+  workflowPath
+};
+
+try {
+  await runWorkflow({
+    sessionId,
+    prompt,
+    engine,
+    plan,
+    backend: new OpenCodeBackendAdapter({
+      directory: process.cwd(),
+      providerId,
+      modelId,
+      allowEdits,
+      allowShell,
+      allowNetwork,
+      maxNodes,
+      promptTimeoutMs: timeoutMs,
+      ...(configPermissionBroker ? { permissionBroker: configPermissionBroker } : {})
+    }),
+    eventLog
+  });
+} catch (error) {
+  console.error(error instanceof Error ? error.message : String(error));
+  process.exitCode = 1;
+}
+
+const events = await eventLog.list(sessionId);
+console.log(json ? renderTraceJson(events) : renderTraceText(events));
+if (!json) printSessionFooter(sessionId);

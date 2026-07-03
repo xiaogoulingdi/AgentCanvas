@@ -1,0 +1,1001 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Agent Canvas</title>
+    <style>
+      :root {
+        --bg: #faf9f6;
+        --rail: #f3f2ee;
+        --surface: #ffffff;
+        --surface-soft: #f8f7f3;
+        --border: #e4e0d8;
+        --border-strong: #cfc8bc;
+        --text: #151515;
+        --muted: #77746d;
+        --soft: #a09b91;
+        --accent: #161616;
+        --success: #2f9b6b;
+        --danger: #b42318;
+        --warning: #a86409;
+        --radius: 8px;
+        --shadow: 0 16px 38px rgb(31 27 20 / 8%);
+        --mono: "SFMono-Regular", Consolas, "Liberation Mono", monospace;
+      }
+
+      * { box-sizing: border-box; }
+
+      html, body {
+        height: 100%;
+      }
+
+      body {
+        margin: 0;
+        background: var(--bg);
+        color: var(--text);
+        font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", "Microsoft YaHei", sans-serif;
+        font-size: 14px;
+        overflow: hidden;
+      }
+
+      button, input, select, textarea {
+        font: inherit;
+      }
+
+      button, input, select {
+        min-height: 36px;
+        border: 1px solid var(--border);
+        border-radius: var(--radius);
+        background: var(--surface);
+        color: var(--text);
+      }
+
+      button {
+        padding: 0 12px;
+        cursor: pointer;
+      }
+
+      button:hover, input:hover, select:hover {
+        border-color: var(--border-strong);
+      }
+
+      button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-visible {
+        outline: 2px solid #d8d2c8;
+        outline-offset: 2px;
+      }
+
+      button.primary {
+        min-width: 42px;
+        border-color: var(--accent);
+        background: var(--accent);
+        color: #fff;
+        font-weight: 750;
+      }
+
+      button.primary:disabled {
+        cursor: wait;
+        opacity: 0.62;
+      }
+
+      button.icon {
+        display: grid;
+        width: 36px;
+        padding: 0;
+        place-items: center;
+      }
+
+      button.ghost {
+        border-color: transparent;
+        background: transparent;
+      }
+
+      select {
+        padding: 0 10px;
+      }
+
+      .app {
+        display: grid;
+        grid-template-columns: 48px 1fr;
+        grid-template-rows: 56px 1fr auto;
+        height: 100vh;
+        min-width: 0;
+      }
+
+      .topbar {
+        grid-column: 1 / -1;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 16px;
+        padding: 0 20px;
+        border-bottom: 1px solid var(--border);
+        background: var(--surface);
+      }
+
+      .brand {
+        display: flex;
+        align-items: baseline;
+        gap: 8px;
+        min-width: 0;
+      }
+
+      .brand strong {
+        font-weight: 850;
+      }
+
+      .project {
+        color: var(--soft);
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+      }
+
+      .rail {
+        grid-row: 2 / 4;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 10px;
+        padding-top: 14px;
+        border-right: 1px solid var(--border);
+        background: var(--rail);
+      }
+
+      .messages {
+        min-height: 0;
+        overflow: auto;
+        padding: 34px 32px 118px;
+      }
+
+      .welcome {
+        display: grid;
+        min-height: 100%;
+        align-content: center;
+        justify-items: center;
+        text-align: center;
+      }
+
+      .bot-mark {
+        display: grid;
+        width: 56px;
+        height: 56px;
+        margin-bottom: 24px;
+        place-items: center;
+        border-radius: 16px;
+        background: var(--surface-soft);
+        color: var(--text);
+        font-size: 24px;
+      }
+
+      .welcome h1 {
+        margin: 0 0 12px;
+        font-size: 30px;
+        line-height: 1.18;
+      }
+
+      .welcome p {
+        margin: 0;
+        color: var(--soft);
+        font-size: 15px;
+      }
+
+      .chips {
+        display: flex;
+        flex-wrap: wrap;
+        justify-content: center;
+        gap: 10px;
+        margin-top: 32px;
+      }
+
+      .chip {
+        min-height: 34px;
+        color: #4f4b45;
+      }
+
+      .thread {
+        display: grid;
+        gap: 20px;
+        max-width: 720px;
+        margin: 0 auto;
+      }
+
+      .user-line {
+        display: flex;
+        justify-content: flex-end;
+      }
+
+      .user-pill {
+        max-width: min(620px, 100%);
+        padding: 14px 18px;
+        border-radius: 18px;
+        background: var(--accent);
+        color: #fff;
+        font-weight: 750;
+        line-height: 1.45;
+      }
+
+      .status-pill {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        width: fit-content;
+        min-height: 34px;
+        padding: 0 14px;
+        border-radius: 999px;
+        background: var(--surface-soft);
+        color: var(--muted);
+      }
+
+      .status-dot {
+        width: 8px;
+        height: 8px;
+        border-radius: 999px;
+        background: var(--success);
+      }
+
+      .status-dot.running {
+        background: var(--warning);
+      }
+
+      .status-dot.failed {
+        background: var(--danger);
+      }
+
+      .result-card {
+        display: grid;
+        gap: 14px;
+        padding: 20px;
+        border: 1px solid var(--border);
+        border-radius: 14px;
+        background: var(--surface);
+        box-shadow: var(--shadow);
+      }
+
+      .result-card h2 {
+        margin: 0;
+        font-size: 17px;
+      }
+
+      .summary-list {
+        display: grid;
+        gap: 10px;
+        margin: 0;
+        padding: 0;
+        list-style: none;
+        color: #4f575f;
+      }
+
+      .summary-list li::before {
+        content: "✓";
+        margin-right: 10px;
+        color: var(--success);
+      }
+
+      .result-meta {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 12px;
+        color: var(--soft);
+        font-size: 13px;
+      }
+
+      .composer-shell {
+        grid-column: 2;
+        position: relative;
+        padding: 12px 24px 16px;
+        border-top: 1px solid var(--border);
+        background: rgb(250 249 246 / 94%);
+        backdrop-filter: blur(12px);
+      }
+
+      .composer {
+        display: grid;
+        grid-template-columns: 150px 42px minmax(180px, 1fr) 44px;
+        gap: 8px;
+        align-items: center;
+        width: min(768px, 100%);
+        margin: 0 auto;
+      }
+
+      .prompt-input {
+        min-height: 42px;
+        padding: 0 16px;
+        border: 1px solid var(--border);
+        border-radius: var(--radius);
+        background: var(--surface);
+      }
+
+      .settings-popover {
+        position: absolute;
+        right: max(24px, calc((100% - 768px) / 2));
+        bottom: 70px;
+        display: none;
+        width: min(380px, calc(100vw - 72px));
+        padding: 16px;
+        border: 1px solid var(--border);
+        border-radius: 14px;
+        background: var(--surface);
+        box-shadow: var(--shadow);
+        z-index: 20;
+      }
+
+      .settings-popover.open {
+        display: block;
+      }
+
+      .settings-head {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        margin-bottom: 12px;
+      }
+
+      .settings-head h2, .drawer-head h2 {
+        margin: 0;
+        font-size: 16px;
+      }
+
+      .field {
+        display: grid;
+        gap: 6px;
+        margin-bottom: 12px;
+      }
+
+      .field label {
+        color: var(--muted);
+        font-size: 12px;
+        font-weight: 750;
+      }
+
+      .field input, .field select {
+        width: 100%;
+      }
+
+      .field-row {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 10px;
+      }
+
+      .checks {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 8px;
+      }
+
+      .check {
+        display: flex;
+        align-items: center;
+        gap: 7px;
+        min-height: 34px;
+        padding: 0 10px;
+        border: 1px solid var(--border);
+        border-radius: var(--radius);
+        background: var(--surface-soft);
+        color: var(--muted);
+        font-size: 12px;
+      }
+
+      .check input {
+        width: 14px;
+        height: 14px;
+      }
+
+      .hint {
+        color: var(--soft);
+        font-size: 12px;
+        line-height: 1.5;
+      }
+
+      .error {
+        display: none;
+        margin-top: 10px;
+        padding: 10px;
+        border: 1px solid #e9b1aa;
+        border-radius: var(--radius);
+        background: #fff0ee;
+        color: var(--danger);
+        font-size: 13px;
+      }
+
+      .drawer {
+        position: fixed;
+        top: 56px;
+        right: 0;
+        bottom: 0;
+        z-index: 30;
+        display: none;
+        width: min(400px, calc(100vw - 48px));
+        border-left: 1px solid var(--border);
+        background: var(--surface);
+        box-shadow: -18px 0 32px rgb(31 27 20 / 8%);
+      }
+
+      .drawer.open {
+        display: grid;
+        grid-template-rows: auto auto 1fr;
+      }
+
+      .drawer-head {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        min-height: 48px;
+        padding: 0 20px;
+        border-bottom: 1px solid var(--border);
+      }
+
+      .tabs {
+        display: flex;
+        gap: 18px;
+        padding: 0 20px;
+        border-bottom: 1px solid var(--border);
+      }
+
+      .tab {
+        min-height: 40px;
+        padding: 0;
+        border: 0;
+        border-bottom: 2px solid transparent;
+        border-radius: 0;
+        background: transparent;
+        color: var(--muted);
+      }
+
+      .tab.active {
+        border-bottom-color: var(--accent);
+        color: var(--text);
+      }
+
+      .drawer-body {
+        min-height: 0;
+        overflow: auto;
+        padding: 18px 20px;
+      }
+
+      .trace-list {
+        display: grid;
+        gap: 14px;
+      }
+
+      .trace-item {
+        display: grid;
+        grid-template-columns: 22px 1fr auto;
+        gap: 10px;
+        align-items: start;
+      }
+
+      .trace-check {
+        display: grid;
+        width: 20px;
+        height: 20px;
+        place-items: center;
+        border-radius: 999px;
+        background: var(--success);
+        color: #fff;
+        font-size: 12px;
+      }
+
+      .trace-title {
+        font-weight: 750;
+      }
+
+      .trace-copy {
+        margin-top: 4px;
+        color: var(--muted);
+        font-size: 13px;
+        line-height: 1.45;
+      }
+
+      .trace-time {
+        color: var(--soft);
+        font-size: 12px;
+      }
+
+      .artifact {
+        display: grid;
+        gap: 6px;
+        padding: 12px 0;
+        border-bottom: 1px solid var(--border);
+      }
+
+      .artifact strong {
+        font-size: 14px;
+      }
+
+      .empty {
+        display: grid;
+        min-height: 96px;
+        place-items: center;
+        border: 1px dashed var(--border);
+        border-radius: var(--radius);
+        background: var(--surface-soft);
+        color: var(--soft);
+        text-align: center;
+      }
+
+      @media (max-width: 760px) {
+        .app {
+          grid-template-columns: 1fr;
+        }
+        .rail {
+          display: none;
+        }
+        .composer-shell {
+          grid-column: 1;
+          padding-inline: 12px;
+        }
+        .composer {
+          grid-template-columns: 1fr 42px;
+        }
+        .pack-select {
+          grid-column: 1 / -1;
+        }
+        .prompt-input {
+          grid-column: 1;
+        }
+        .settings-popover {
+          right: 12px;
+          bottom: 118px;
+          width: calc(100vw - 24px);
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <main class="app">
+      <header class="topbar">
+        <div class="brand">
+          <strong>Agent Canvas</strong>
+          <span>/</span>
+          <span class="project">my-project</span>
+        </div>
+        <button class="ghost icon" id="themeButton" type="button" title="外观">☼</button>
+      </header>
+
+      <aside class="rail" aria-label="工具">
+        <button class="ghost icon" id="refreshButton" type="button" title="刷新运行">↻</button>
+      </aside>
+
+      <section class="messages" id="messages" aria-live="polite"></section>
+
+      <section class="composer-shell">
+        <form class="composer" id="runForm">
+          <select class="pack-select" id="packInput" aria-label="Agent Pack">
+            <option value="deepseek-solo">DeepSeek Solo</option>
+            <option value="deepseek-kimi" selected>DeepSeek + Kimi</option>
+            <option value="deepseek-kimi-openai">DeepSeek + Kimi + OpenAI</option>
+          </select>
+          <button class="icon" id="settingsButton" type="button" title="模型设置">☷</button>
+          <input class="prompt-input" id="promptInput" autocomplete="off" placeholder="输入任务开始..." />
+          <button class="primary icon" id="runButton" type="submit" title="运行">→</button>
+        </form>
+
+        <div class="settings-popover" id="settingsPanel">
+          <div class="settings-head">
+            <h2>模型设置</h2>
+            <button class="ghost icon" id="closeSettingsButton" type="button" title="关闭">×</button>
+          </div>
+          <div class="field">
+            <label for="engineInput">运行引擎</label>
+            <select id="engineInput">
+              <option value="fake">Fake Runtime（本地测试）</option>
+              <option value="opencode">OpenCode Backend</option>
+            </select>
+          </div>
+          <div class="field">
+            <label>当前策略组</label>
+            <div class="hint" id="packDescription">DeepSeek 负责规则制定，Kimi 负责代码编写。</div>
+          </div>
+          <div class="field">
+            <label for="configInput">配置文件</label>
+            <input id="configInput" value="agentcanvas.config.example.json" />
+          </div>
+          <div class="field-row">
+            <div class="field">
+              <label for="timeoutInput">超时</label>
+              <input id="timeoutInput" type="number" min="1000" step="1000" value="90000" />
+            </div>
+            <div class="field">
+              <label for="maxNodesInput">OpenCode 节点</label>
+              <input id="maxNodesInput" type="number" min="1" step="1" value="1" />
+            </div>
+          </div>
+          <div class="field">
+            <label>OpenCode 权限</label>
+            <div class="checks">
+              <label class="check"><input id="allowEditsInput" type="checkbox" />编辑</label>
+              <label class="check"><input id="allowShellInput" type="checkbox" />终端</label>
+              <label class="check"><input id="allowNetworkInput" type="checkbox" />网络</label>
+            </div>
+          </div>
+          <div class="error" id="errorBox"></div>
+        </div>
+      </section>
+
+      <aside class="drawer" id="detailDrawer" aria-label="运行详情">
+        <div class="drawer-head">
+          <h2>运行详情</h2>
+          <button class="ghost icon" id="closeDrawerButton" type="button" title="关闭">×</button>
+        </div>
+        <div class="tabs" role="tablist" aria-label="详情">
+          <button class="tab active" data-detail-tab="trace" type="button">Trace</button>
+          <button class="tab" data-detail-tab="artifacts" type="button">Artifacts</button>
+        </div>
+        <div class="drawer-body" id="drawerBody"></div>
+      </aside>
+    </main>
+
+    <script>
+      const state = {
+        packs: [],
+        trace: null,
+        runs: [],
+        loading: false,
+        lastPrompt: "",
+        detailTab: "trace"
+      };
+
+      const elements = {
+        messages: document.getElementById("messages"),
+        runForm: document.getElementById("runForm"),
+        promptInput: document.getElementById("promptInput"),
+        runButton: document.getElementById("runButton"),
+        packInput: document.getElementById("packInput"),
+        settingsButton: document.getElementById("settingsButton"),
+        closeSettingsButton: document.getElementById("closeSettingsButton"),
+        settingsPanel: document.getElementById("settingsPanel"),
+        engineInput: document.getElementById("engineInput"),
+        configInput: document.getElementById("configInput"),
+        timeoutInput: document.getElementById("timeoutInput"),
+        maxNodesInput: document.getElementById("maxNodesInput"),
+        allowEditsInput: document.getElementById("allowEditsInput"),
+        allowShellInput: document.getElementById("allowShellInput"),
+        allowNetworkInput: document.getElementById("allowNetworkInput"),
+        packDescription: document.getElementById("packDescription"),
+        errorBox: document.getElementById("errorBox"),
+        detailDrawer: document.getElementById("detailDrawer"),
+        drawerBody: document.getElementById("drawerBody"),
+        closeDrawerButton: document.getElementById("closeDrawerButton"),
+        refreshButton: document.getElementById("refreshButton")
+      };
+
+      elements.runForm.addEventListener("submit", (event) => {
+        event.preventDefault();
+        submitRun();
+      });
+      elements.settingsButton.addEventListener("click", () => elements.settingsPanel.classList.toggle("open"));
+      elements.closeSettingsButton.addEventListener("click", () => elements.settingsPanel.classList.remove("open"));
+      elements.closeDrawerButton.addEventListener("click", () => closeDetails());
+      elements.refreshButton.addEventListener("click", () => refreshRuns({ loadLatest: true }));
+      elements.packInput.addEventListener("change", renderSettings);
+      document.querySelectorAll("[data-detail-tab]").forEach((button) => {
+        button.addEventListener("click", () => {
+          state.detailTab = button.getAttribute("data-detail-tab");
+          renderDetails();
+        });
+      });
+
+      loadPacks();
+      refreshRuns();
+      render();
+
+      async function loadPacks() {
+        try {
+          const response = await fetch("/api/packs", { cache: "no-store" });
+          if (!response.ok) throw new Error(`Pack API ${response.status}`);
+          const payload = await response.json();
+          state.packs = Array.isArray(payload.packs) ? payload.packs : [];
+        } catch {
+          state.packs = fallbackPacks();
+        }
+        renderPackOptions();
+        renderSettings();
+      }
+
+      async function refreshRuns(options = {}) {
+        try {
+          const response = await fetch("/api/runs?limit=20", { cache: "no-store" });
+          if (!response.ok) return;
+          const payload = await response.json();
+          state.runs = Array.isArray(payload.runs) ? payload.runs : [];
+          if (options.loadLatest && state.runs[0]) await loadRun(state.runs[0].sessionId);
+        } catch {
+          state.runs = [];
+        }
+      }
+
+      async function loadRun(sessionId) {
+        const response = await fetch(`/api/runs/${encodeURIComponent(sessionId)}`, { cache: "no-store" });
+        if (!response.ok) return;
+        applyTrace(await response.json());
+      }
+
+      async function submitRun() {
+        const prompt = elements.promptInput.value.trim();
+        if (!prompt) {
+          elements.promptInput.focus();
+          return;
+        }
+        state.lastPrompt = prompt;
+        state.loading = true;
+        state.trace = null;
+        showError("");
+        render();
+
+        try {
+          const response = await fetch("/api/runs", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(createRunPayload(prompt))
+          });
+          const text = await response.text();
+          const body = text ? JSON.parse(text) : {};
+          if (!response.ok) throw new Error(body.error ?? `运行失败：HTTP ${response.status}`);
+          applyTrace(body);
+          elements.promptInput.value = "";
+          await refreshRuns();
+        } catch (error) {
+          state.loading = false;
+          showError(error instanceof Error ? error.message : String(error));
+          render(error instanceof Error ? error.message : String(error));
+        }
+      }
+
+      function createRunPayload(prompt) {
+        return {
+          prompt,
+          engine: elements.engineInput.value,
+          pack: elements.packInput.value,
+          config: elements.configInput.value.trim() || undefined,
+          allowOpenCodeEdits: elements.allowEditsInput.checked,
+          allowOpenCodeShell: elements.allowShellInput.checked,
+          allowOpenCodeNetwork: elements.allowNetworkInput.checked,
+          timeoutMs: Number(elements.timeoutInput.value || 90000),
+          maxNodes: Number(elements.maxNodesInput.value || 1)
+        };
+      }
+
+      function applyTrace(trace) {
+        if (!Array.isArray(trace.events)) throw new Error("Trace JSON must include an events array.");
+        state.trace = trace;
+        state.loading = false;
+        render();
+      }
+
+      function render(errorMessage) {
+        elements.runButton.disabled = state.loading;
+        elements.runButton.textContent = state.loading ? "…" : "→";
+        if (!state.trace && !state.loading && !errorMessage) {
+          renderInitial();
+          return;
+        }
+        renderThread(errorMessage);
+      }
+
+      function renderInitial() {
+        elements.messages.innerHTML = `
+          <div class="welcome">
+            <div class="bot-mark">⌘</div>
+            <h1>开始工作</h1>
+            <p>选择 Agent Pack，输入任务描述，即刻开始</p>
+            <div class="chips">
+              <button class="chip" data-prompt="重构登录模块，使用 JWT 替换现有 session 方案" type="button">重构登录模块</button>
+              <button class="chip" data-prompt="修复类型错误，并说明修改了哪些文件" type="button">修复类型错误</button>
+              <button class="chip" data-prompt="为当前模块添加单元测试" type="button">添加单元测试</button>
+            </div>
+          </div>
+        `;
+        bindPromptChips();
+      }
+
+      function renderThread(errorMessage) {
+        const trace = state.trace;
+        const status = errorMessage ? "failed" : state.loading ? "running" : trace?.status ?? "completed";
+        const meta = trace ? summarizeMeta(trace) : { steps: "运行中", cost: "-", artifacts: "0" };
+        const title = errorMessage ? "执行失败" : state.loading ? "正在运行" : "执行完成";
+        const bullets = errorMessage ? [errorMessage] : state.loading ? ["正在分析项目结构", "正在执行所选 Agent Pack"] : summarizeBullets(trace);
+        const drawerButton = trace
+          ? '<button class="chip" id="openDetailsButton" type="button">查看详情 ›</button>'
+          : "";
+        elements.messages.innerHTML = `
+          <div class="thread">
+            <div class="user-line"><div class="user-pill">${escapeHtml(state.lastPrompt || findEvent("user.prompt.submitted")?.prompt || "")}</div></div>
+            <div class="status-pill"><span class="status-dot ${escapeHtml(status)}"></span>${escapeHtml(title)} · ${escapeHtml(meta.steps)}</div>
+            <article class="result-card">
+              <h2>${escapeHtml(resultTitle(status))}</h2>
+              <ul class="summary-list">${bullets.map((item) => `<li>${escapeHtml(item)}</li>`).join("")}</ul>
+              <div class="result-meta">
+                <span>${escapeHtml(meta.artifacts)} 个产物</span>
+                <span>预估成本 ${escapeHtml(meta.cost)}</span>
+                <span>${escapeHtml(selectedPack()?.name ?? elements.packInput.value)}</span>
+              </div>
+              <div>${drawerButton}</div>
+            </article>
+          </div>
+        `;
+        document.getElementById("openDetailsButton")?.addEventListener("click", openDetails);
+      }
+
+      function resultTitle(status) {
+        if (status === "failed") return "任务没有完成";
+        if (status === "running") return "Agent Canvas 正在处理任务";
+        return "任务已完成";
+      }
+
+      function summarizeMeta(trace) {
+        return {
+          steps: `${trace.events?.length ?? 0} 步`,
+          artifacts: String(trace.artifacts?.length ?? 0),
+          cost: `$${Number(trace.estimatedUsd ?? 0).toFixed(4)}`
+        };
+      }
+
+      function summarizeBullets(trace) {
+        const workflow = trace.events.find((event) => event.type === "workflow.loaded");
+        const artifactCount = trace.artifacts?.length ?? 0;
+        const changed = trace.artifacts?.find((artifact) => artifact.kind === "patch");
+        return [
+          `已使用 ${workflow?.workflowName ?? selectedPack()?.name ?? "当前策略组"} 执行任务`,
+          artifactCount > 0 ? `生成了 ${artifactCount} 个结果产物` : "没有生成文件产物",
+          changed ? "包含可查看的代码修改摘要" : "可在详情中查看完整执行轨迹"
+        ];
+      }
+
+      function renderPackOptions() {
+        if (state.packs.length === 0) return;
+        const current = elements.packInput.value;
+        elements.packInput.innerHTML = state.packs.map((pack) => `<option value="${escapeHtml(pack.id)}">${escapeHtml(pack.name)}</option>`).join("");
+        elements.packInput.value = state.packs.some((pack) => pack.id === current) ? current : "deepseek-kimi";
+      }
+
+      function renderSettings() {
+        const pack = selectedPack();
+        elements.packDescription.textContent = pack ? `${pack.tagline}。${pack.description}` : "选择一个 Agent Pack 后开始运行。";
+      }
+
+      function openDetails() {
+        elements.detailDrawer.classList.add("open");
+        renderDetails();
+      }
+
+      function closeDetails() {
+        elements.detailDrawer.classList.remove("open");
+      }
+
+      function renderDetails() {
+        document.querySelectorAll("[data-detail-tab]").forEach((button) => {
+          button.classList.toggle("active", button.getAttribute("data-detail-tab") === state.detailTab);
+        });
+        if (!state.trace) {
+          elements.drawerBody.innerHTML = '<div class="empty">暂无运行详情</div>';
+          return;
+        }
+        elements.drawerBody.innerHTML = state.detailTab === "artifacts" ? renderArtifacts() : renderTrace();
+      }
+
+      function renderTrace() {
+        const visible = state.trace.events
+          .filter((event) => ["workflow.loaded", "workflow.compiled", "agent.started", "model.route.selected", "artifact.created", "workflow.completed", "workflow.failed"].includes(event.type))
+          .slice(0, 24);
+        if (visible.length === 0) return '<div class="empty">暂无 Trace</div>';
+        return `<div class="trace-list">${visible.map((event) => `
+          <div class="trace-item">
+            <div class="trace-check">${event.type === "workflow.failed" ? "!" : "✓"}</div>
+            <div>
+              <div class="trace-title">${escapeHtml(traceTitle(event))}</div>
+              <div class="trace-copy">${escapeHtml(traceCopy(event))}</div>
+            </div>
+            <div class="trace-time">${escapeHtml(relativeEventTime(event))}</div>
+          </div>
+        `).join("")}</div>`;
+      }
+
+      function renderArtifacts() {
+        const artifacts = state.trace.artifacts ?? [];
+        if (artifacts.length === 0) return '<div class="empty">暂无产物</div>';
+        return artifacts.map((artifact) => `
+          <div class="artifact">
+            <strong>${escapeHtml(artifact.title)}</strong>
+            <span class="hint">${escapeHtml(artifact.kind)} · ${escapeHtml(artifact.id)}</span>
+            <span class="hint">${escapeHtml(summarizeArtifact(artifact))}</span>
+          </div>
+        `).join("");
+      }
+
+      function traceTitle(event) {
+        if (event.type === "workflow.loaded") return "载入策略组";
+        if (event.type === "workflow.compiled") return "生成执行计划";
+        if (event.type === "agent.started") return `${titleCase(event.nodeId)} 开始工作`;
+        if (event.type === "model.route.selected") return `${titleCase(event.nodeId)} 选择模型`;
+        if (event.type === "artifact.created") return "生成产物";
+        if (event.type === "workflow.completed") return "流程完成";
+        if (event.type === "workflow.failed") return "流程失败";
+        return event.type;
+      }
+
+      function traceCopy(event) {
+        if (event.type === "workflow.loaded") return event.workflowName ?? event.workflowId;
+        if (event.type === "workflow.compiled") return `${event.nodeCount} 个节点，${event.edgeCount} 条连接`;
+        if (event.type === "agent.started") return event.role ?? event.nodeId;
+        if (event.type === "model.route.selected") return `${event.selectedModel} · ${event.reason}`;
+        if (event.type === "artifact.created") return `${event.artifact.kind} · ${event.artifact.title}`;
+        if (event.type === "workflow.failed") return event.message;
+        return event.workflowId ?? event.timestamp ?? "";
+      }
+
+      function relativeEventTime(event) {
+        if (!state.trace?.events?.[0]?.timestamp || !event.timestamp) return "";
+        const start = new Date(state.trace.events[0].timestamp).getTime();
+        const current = new Date(event.timestamp).getTime();
+        const diff = Math.max(0, (current - start) / 1000);
+        return `${diff.toFixed(1)}s`;
+      }
+
+      function bindPromptChips() {
+        document.querySelectorAll("[data-prompt]").forEach((button) => {
+          button.addEventListener("click", () => {
+            elements.promptInput.value = button.getAttribute("data-prompt");
+            elements.promptInput.focus();
+          });
+        });
+      }
+
+      function showError(message) {
+        elements.errorBox.textContent = message;
+        elements.errorBox.style.display = message ? "block" : "none";
+        if (message) elements.settingsPanel.classList.add("open");
+      }
+
+      function selectedPack() {
+        return state.packs.find((pack) => pack.id === elements.packInput.value) ?? fallbackPacks().find((pack) => pack.id === elements.packInput.value);
+      }
+
+      function findEvent(type) {
+        return state.trace?.events?.find((event) => event.type === type);
+      }
+
+      function summarizeArtifact(artifact) {
+        const diffs = artifact.metadata?.diffs;
+        if (Array.isArray(diffs) && diffs.length > 0) return diffs.map((diff) => `${diff.file} +${diff.additions ?? 0} -${diff.deletions ?? 0}`).join(", ");
+        return String(artifact.content ?? "").replace(/\s+/g, " ").slice(0, 160);
+      }
+
+      function titleCase(value) {
+        return String(value ?? "").replace(/[-_]/g, " ").replace(/\b\w/g, (letter) => letter.toUpperCase());
+      }
+
+      function escapeHtml(value) {
+        return String(value ?? "")
+          .replaceAll("&", "&amp;")
+          .replaceAll("<", "&lt;")
+          .replaceAll(">", "&gt;")
+          .replaceAll('"', "&quot;");
+      }
+
+      function fallbackPacks() {
+        return [
+          {
+            id: "deepseek-solo",
+            name: "DeepSeek Solo",
+            tagline: "低成本基线",
+            description: "DeepSeek 负责规则制定、代码编写和简单审查。"
+          },
+          {
+            id: "deepseek-kimi",
+            name: "DeepSeek + Kimi",
+            tagline: "DeepSeek 定规则，Kimi 写代码",
+            description: "DeepSeek 负责任务规划和规则制定，Kimi 负责代码编写。"
+          },
+          {
+            id: "deepseek-kimi-openai",
+            name: "DeepSeek + Kimi + OpenAI",
+            tagline: "规则、编码、强审查",
+            description: "DeepSeek 定规则，Kimi 写代码，OpenAI 负责最终审查。"
+          }
+        ];
+      }
+    </script>
+  </body>
+</html>

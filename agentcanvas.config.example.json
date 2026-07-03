@@ -1,0 +1,60 @@
+{
+  "$schema": "./schemas/agentcanvas.config.schema.json",
+  "version": "0.1.0",
+  "defaultEngine": "balanced-coding-group",
+  "opencodeDefault": "deepseek/deepseek-v4-flash",
+  "providers": {
+    "deepseek": {
+      "type": "openai_compatible",
+      "baseUrl": "https://api.deepseek.com",
+      "apiKeyEnv": "DEEPSEEK_API_KEY",
+      "wireApi": "chat_completions",
+      "models": {
+        "default": "deepseek-v4-flash"
+      }
+    },
+    "kimi": {
+      "type": "openai_compatible",
+      "baseUrl": "https://api.moonshot.cn/v1",
+      "apiKeyEnv": "KIMI_API_KEY",
+      "wireApi": "chat_completions",
+      "models": {
+        "default": "kimi-k2.6"
+      }
+    },
+    "sub2api": {
+      "type": "openai_responses",
+      "baseUrl": "https://api.lululala.icu/v1",
+      "apiKeyEnv": "AGENT_CANVAS_API_KEY",
+      "wireApi": "responses",
+      "requiresOpenAIAuth": false,
+      "disableResponseStorage": true,
+      "models": {
+        "default": "gpt-5.4-mini"
+      }
+    }
+  },
+  "models": {
+    "default": "deepseek/deepseek-v4-flash",
+    "planning": "deepseek/deepseek-v4-flash",
+    "code": "deepseek/deepseek-v4-flash",
+    "review": "kimi/kimi-k2.6"
+  },
+  "mcpServers": {
+    "node_repl": {
+      "command": "node_repl.exe",
+      "args": [],
+      "env": {}
+    }
+  },
+  "tools": {
+    "filesystem.read": "allow",
+    "filesystem.patch": "ask",
+    "shell": "deny",
+    "network": "ask",
+    "browser": "ask",
+    "model.cost": "allow"
+  },
+  "groups": ["examples/groups/balanced-coding-group.json"],
+  "workflows": ["examples/workflows/research-code.json", "examples/workflows/opencode-single.json"]
+}

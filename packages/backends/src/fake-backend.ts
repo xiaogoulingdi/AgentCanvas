@@ -1,7 +1,15 @@
 import { createId } from "../../shared/src/ids.ts";
+import { createReadOnlyPermissionBroker } from "../../permissions/src/static-permission-broker.ts";
+import type { PermissionBroker } from "../../permissions/src/types.ts";
+import { MockToolBroker } from "../../tools/src/mock-tool-broker.ts";
+import type { ToolBroker } from "../../tools/src/types.ts";
 import type { AgentBackend, BackendEvent, BackendRunRequest } from "./types.ts";
+import type { PlanNode } from "../../workflow/src/types.ts";
 
 export class FakeBackendAdapter implements AgentBackend {
+  private readonly permissionBroker: PermissionBroker;
+  private readonly toolBroker: ToolBroker;
+
   readonly id = "fake-backend";
   readonly capabilities = {
     supportsTools: true,
@@ -9,6 +17,11 @@ export class FakeBackendAdapter implements AgentBackend {
     supportsPermissions: true,
     supportsArtifacts: true
   };
+
+  constructor(input: { permissionBroker?: PermissionBroker; toolBroker?: ToolBroker } = {}) {
+    this.permissionBroker = input.permissionBroker ?? createReadOnlyPermissionBroker();
+    this.toolBroker = input.toolBroker ?? new MockToolBroker();
+  }
 
   async *run(request: BackendRunRequest): AsyncIterable<BackendEvent> {
     for (const node of request.plan.nodes) {
@@ -34,17 +47,28 @@ export class FakeBackendAdapter implements AgentBackend {
       };
 
       for (const scope of node.permissions ?? []) {
-        yield { type: "permission.checked", node, scope, decision: scope === "shell" ? "ask" : "allow" };
+        const permission = await explainPermission(this.permissionBroker, { sessionId: request.sessionId, node, scope });
+        yield permissionCheckedEvent({ node, scope, ...permission });
       }
 
       for (const toolName of node.tools ?? []) {
         yield { type: "tool.call.requested", node, toolName };
+        const result = await this.toolBroker.execute({
+          sessionId: request.sessionId,
+          node,
+          toolName,
+          prompt: request.prompt,
+          modelOutput: `Fake ${node.role} response for prompt: ${request.prompt}`
+        });
         yield {
           type: "tool.call.completed",
           node,
           toolName,
-          summary: `Fake tool '${toolName}' completed.`
+          summary: result.summary
         };
+        for (const artifact of result.artifacts ?? []) {
+          yield { type: "artifact.created", node, artifact };
+        }
       }
 
       if (node.role.includes("coder")) {
@@ -63,6 +87,31 @@ export class FakeBackendAdapter implements AgentBackend {
       yield { type: "agent.completed", node, status: "completed" };
     }
   }
+}
+
+function permissionCheckedEvent(input: {
+  node: PlanNode;
+  scope: string;
+  decision: "allow" | "ask" | "deny";
+  reason?: string;
+  source?: string;
+}): BackendEvent {
+  return {
+    type: "permission.checked",
+    node: input.node,
+    scope: input.scope,
+    decision: input.decision,
+    ...(input.reason ? { reason: input.reason } : {}),
+    ...(input.source ? { source: input.source } : {})
+  };
+}
+
+async function explainPermission(
+  broker: PermissionBroker,
+  request: Parameters<PermissionBroker["check"]>[0]
+): Promise<{ decision: "allow" | "ask" | "deny"; reason?: string; source?: string }> {
+  if (broker.explain) return broker.explain(request);
+  return { decision: await broker.check(request) };
 }
 
 function modelForRoute(route: string): string {

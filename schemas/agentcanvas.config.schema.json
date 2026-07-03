@@ -1,0 +1,116 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://agentcanvas.local/schemas/agentcanvas.config.schema.json",
+  "title": "Agent Canvas Configuration",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["version", "providers"],
+  "properties": {
+    "$schema": {
+      "type": "string"
+    },
+    "version": {
+      "type": "string"
+    },
+    "defaultEngine": {
+      "type": "string"
+    },
+    "opencodeDefault": {
+      "type": "string"
+    },
+    "providers": {
+      "type": "object",
+      "additionalProperties": {
+        "$ref": "#/$defs/provider"
+      }
+    },
+    "models": {
+      "type": "object",
+      "additionalProperties": {
+        "type": "string"
+      }
+    },
+    "mcpServers": {
+      "type": "object",
+      "additionalProperties": {
+        "$ref": "#/$defs/mcpServer"
+      }
+    },
+    "tools": {
+      "type": "object",
+      "additionalProperties": {
+        "$ref": "#/$defs/permissionDecision"
+      }
+    },
+    "groups": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "workflows": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    }
+  },
+  "$defs": {
+    "provider": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["type", "baseUrl", "apiKeyEnv"],
+      "properties": {
+        "type": {
+          "enum": ["openai_compatible", "openai_responses", "anthropic_compatible", "opencode", "custom"]
+        },
+        "baseUrl": {
+          "type": "string"
+        },
+        "apiKeyEnv": {
+          "type": "string"
+        },
+        "wireApi": {
+          "enum": ["chat_completions", "responses", "messages"]
+        },
+        "requiresOpenAIAuth": {
+          "type": "boolean"
+        },
+        "disableResponseStorage": {
+          "type": "boolean"
+        },
+        "models": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "mcpServer": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["command"],
+      "properties": {
+        "command": {
+          "type": "string"
+        },
+        "args": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "env": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "permissionDecision": {
+      "enum": ["allow", "ask", "deny"]
+    }
+  }
+}
